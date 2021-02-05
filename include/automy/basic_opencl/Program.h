@@ -5,17 +5,18 @@
  *      Author: mad
  */
 
-#ifndef OPENCL_INCLUDE_OPENCL_PROGRAM_H_
-#define OPENCL_INCLUDE_OPENCL_PROGRAM_H_
+#ifndef INCLUDE_AUTOMY_BASIC_OPENCL_PROGRAM_H_
+#define INCLUDE_AUTOMY_BASIC_OPENCL_PROGRAM_H_
 
-#include <opencl/Context.h>
-#include <opencl/Kernel.h>
+#include <automy/basic_opencl/Context.h>
+#include <automy/basic_opencl/Kernel.h>
 
 #include <vector>
 #include <string>
 
 
-namespace opencl {
+namespace automy {
+namespace basic_opencl {
 
 class Program;
 
@@ -59,7 +60,7 @@ private:
 };
 
 
-} // opencl
+} // basic_opencl
+} // automy
 
-
-#endif /* OPENCL_INCLUDE_OPENCL_PROGRAM_H_ */
+#endif /* INCLUDE_AUTOMY_BASIC_OPENCL_PROGRAM_H_ */

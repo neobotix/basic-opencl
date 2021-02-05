@@ -15,5 +15,5 @@ target_include_directories(automy_basic_opencl
 )
 
 target_link_libraries(automy_basic_opencl
-	OpenCL
+	automy_basic automy_math OpenCL
 )

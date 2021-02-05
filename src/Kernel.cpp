@@ -5,10 +5,11 @@
  *      Author: mad
  */
 
-#include <opencl/Kernel.h>
+#include <automy/basic_opencl/Kernel.h>
 
 
-namespace opencl {
+namespace automy {
+namespace basic_opencl {
 
 Kernel::Kernel(cl_kernel kernel_)
 	:	kernel(kernel_)
@@ -100,7 +101,7 @@ void Kernel::enqueue_3D(std::shared_ptr<CommandQueue> queue, const std::array<si
 
 void Kernel::print_info(std::ostream& out) {
 	out << name << "(";
-	for(int i = 0; i < arg_list.size(); ++i) {
+	for(size_t i = 0; i < arg_list.size(); ++i) {
 		if(i > 0) {
 			out << ", ";
 		}
@@ -110,4 +111,5 @@ void Kernel::print_info(std::ostream& out) {
 }
 
 
-} // opencl
+} // basic_opencl
+} // automy

@@ -5,11 +5,12 @@
  *      Author: mad
  */
 
-#ifndef OPENCL_INCLUDE_OPENCL_KERNEL_H_
-#define OPENCL_INCLUDE_OPENCL_KERNEL_H_
+#ifndef INCLUDE_AUTOMY_BASIC_OPENCL_KERNEL_H_
+#define INCLUDE_AUTOMY_BASIC_OPENCL_KERNEL_H_
 
-#include <opencl/Context.h>
-#include <opencl/Buffer.h>
+#include <automy/basic_opencl/Context.h>
+#include <automy/basic_opencl/Buffer.h>
+#include <automy/basic_opencl/Image.h>
 
 #include <map>
 #include <string>
@@ -18,7 +19,8 @@
 #include <ostream>
 
 
-namespace opencl {
+namespace automy {
+namespace basic_opencl {
 
 class Kernel {
 public:
@@ -35,7 +37,9 @@ public:
 	void set(const std::string& arg, const cl_uint& value) { set_arg(arg, value); }
 	void set(const std::string& arg, const cl_float& value) { set_arg(arg, value); }
 	void set(const std::string& arg, const Buffer& value) { set_arg(arg, value.data()); }
+	void set(const std::string& arg, const Image& value) { set_arg(arg, value.data()); }
 	void set(const std::string& arg, std::shared_ptr<const Buffer> value) { set_arg(arg, value->data()); }
+	void set(const std::string& arg, std::shared_ptr<const Image> value) { set_arg(arg, value->data()); }
 	
 	void set_local(const std::string& arg, const size_t& num_bytes);
 	
@@ -71,7 +75,7 @@ private:
 };
 
 
-} // opencl
+} // basic_opencl
+} // automy
 
-
-#endif /* OPENCL_INCLUDE_OPENCL_KERNEL_H_ */
+#endif /* INCLUDE_AUTOMY_BASIC_OPENCL_KERNEL_H_ */

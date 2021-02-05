@@ -5,13 +5,14 @@
  *      Author: mad
  */
 
-#include <opencl/Program.h>
+#include <automy/basic_opencl/Program.h>
 
 #include <map>
 #include <fstream>
 
 
-namespace opencl {
+namespace automy {
+namespace basic_opencl {
 
 std::map<std::string, std::shared_ptr<const Program>> g_programs;
 
@@ -130,4 +131,5 @@ std::shared_ptr<Kernel> Program::create_kernel(const std::string& name) const {
 }
 
 
-} // opencl
+} // basic_opencl
+} // automy

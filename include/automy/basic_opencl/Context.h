@@ -5,10 +5,10 @@
  *      Author: mad
  */
 
-#ifndef OPENCL_INCLUDE_OPENCL_CONTEXT_H_
-#define OPENCL_INCLUDE_OPENCL_CONTEXT_H_
+#ifndef INCLUDE_AUTOMY_BASIC_OPENCL_CONTEXT_H_
+#define INCLUDE_AUTOMY_BASIC_OPENCL_CONTEXT_H_
 
-#include <opencl/CommandQueue.h>
+#include <automy/basic_opencl/CommandQueue.h>
 
 #include <CL/cl.h>
 
@@ -18,7 +18,8 @@
 #include <mutex>
 
 
-namespace opencl {
+namespace automy {
+namespace basic_opencl {
 
 extern std::mutex g_mutex;
 
@@ -38,6 +39,7 @@ std::shared_ptr<CommandQueue> create_command_queue(int device);
 std::string get_error_string(cl_int error);
 
 
-} // opencl
+} // basic_opencl
+} // automy
 
-#endif /* OPENCL_INCLUDE_OPENCL_CONTEXT_H_ */
+#endif /* INCLUDE_AUTOMY_BASIC_OPENCL_CONTEXT_H_ */

@@ -5,8 +5,8 @@
  *      Author: mad
  */
 
-#ifndef OPENCL_INCLUDE_OPENCL_COMMANDQUEUE_H_
-#define OPENCL_INCLUDE_OPENCL_COMMANDQUEUE_H_
+#ifndef INCLUDE_AUTOMY_BASIC_OPENCL_COMMANDQUEUE_H_
+#define INCLUDE_AUTOMY_BASIC_OPENCL_COMMANDQUEUE_H_
 
 #include <CL/cl.h>
 
@@ -14,7 +14,8 @@
 #include <memory>
 
 
-namespace opencl {
+namespace automy {
+namespace basic_opencl {
 
 class CommandQueue {
 public:
@@ -53,7 +54,7 @@ private:
 };
 
 
-} // opencl
+} // basic_opencl
+} // automy
 
-
-#endif /* OPENCL_INCLUDE_OPENCL_COMMANDQUEUE_H_ */
+#endif /* INCLUDE_AUTOMY_BASIC_OPENCL_COMMANDQUEUE_H_ */

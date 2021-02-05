@@ -5,13 +5,14 @@
  *      Author: mad
  */
 
-#ifndef OPENCL_INCLUDE_BUFFER_H_
-#define OPENCL_INCLUDE_BUFFER_H_
+#ifndef INCLUDE_AUTOMY_BASIC_OPENCL_BUFFER_H_
+#define INCLUDE_AUTOMY_BASIC_OPENCL_BUFFER_H_
 
-#include <opencl/Context.h>
+#include <automy/basic_opencl/Context.h>
 
 
-namespace opencl {
+namespace automy {
+namespace basic_opencl {
 
 class Buffer {
 public:
@@ -36,7 +37,7 @@ protected:
 };
 
 
-} // opencl
+} // basic_opencl
+} // automy
 
-
-#endif /* OPENCL_INCLUDE_BUFFER_H_ */
+#endif /* INCLUDE_AUTOMY_BASIC_OPENCL_BUFFER_H_ */

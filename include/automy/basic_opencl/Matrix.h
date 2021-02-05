@@ -1,0 +1,71 @@
+/*
+ * Matrix.h
+ *
+ *  Created on: Feb 5, 2021
+ *      Author: mad
+ */
+
+#ifndef INCLUDE_AUTOMY_BASIC_OPENCL_MATRIX_H_
+#define INCLUDE_AUTOMY_BASIC_OPENCL_MATRIX_H_
+
+#include <automy/basic_opencl/Buffer3D.h>
+
+#include <automy/math/Matrix.hpp>
+
+
+namespace automy {
+namespace basic_opencl {
+
+template<typename T, size_t Rows, size_t Cols>
+class Matrix : public Buffer3D<T> {
+public:
+	Matrix() : Buffer3D(Rows, Cols) {}
+
+	Matrix(size_t depth) : Buffer3D(Rows, Cols, depth) {}
+
+	void resize(size_t depth) {
+		Buffer3D::resize(Rows, Cols, depth);
+	}
+
+	size_t rows() const {
+		return width();
+	}
+
+	size_t cols() const {
+		return height();
+	}
+
+	template<typename S>
+	void upload(std::shared_ptr<CommandQueue> queue, const math::Matrix<S, Rows, Cols>& mat, bool blocking = false) {
+		resize(1);
+		math::Matrix<T, Rows, Cols> tmp(mat);
+		upload(queue, tmp.get_data(), blocking);
+	}
+
+	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<const math::Matrix<T, Rows, Cols>>& mats, bool blocking = false) {
+		resize(mats.size());
+		upload(queue, mats.data(), blocking);
+	}
+
+	void download(std::shared_ptr<CommandQueue> queue, math::Matrix<T, Rows, Cols>& mat, bool blocking = true) const {
+		if(width_ != Rows  || height_ != Cols || depth_ != 1) {
+			throw std::logic_error("dimension mismatch");
+		}
+		download(queue, mat.get_data(), blocking);
+	}
+
+	void download(std::shared_ptr<CommandQueue> queue, const std::vector<const math::Matrix<T, Rows, Cols>>& mats, bool blocking = true) const {
+		if(width_ != Rows  || height_ != Cols) {
+			throw std::logic_error("dimension mismatch");
+		}
+		mats.resize(depth_);
+		download(queue, mats.data(), blocking);
+	}
+
+};
+
+
+} // basic_opencl
+} // automy
+
+#endif /* INCLUDE_AUTOMY_BASIC_OPENCL_MATRIX_H_ */

@@ -5,12 +5,13 @@
  *      Author: dev
  */
 
-#include <opencl/Context.h>
+#include <automy/basic_opencl/Context.h>
 
 #include <mutex>
 
 
-namespace opencl {
+namespace automy {
+namespace basic_opencl {
 
 std::mutex g_mutex;
 
@@ -175,4 +176,5 @@ std::string get_error_string(cl_int error) {
 }
 
 
-} // opencl
+} // basic_opencl
+} // automy

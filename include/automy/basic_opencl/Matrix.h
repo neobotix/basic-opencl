@@ -19,21 +19,23 @@ namespace basic_opencl {
 template<typename T, size_t Rows, size_t Cols>
 class Matrix : public Buffer3D<T> {
 public:
-	Matrix() : Buffer3D(Rows, Cols) {}
+	Matrix() : Buffer3D<T>(Rows, Cols) {}
 
-	Matrix(size_t depth) : Buffer3D(Rows, Cols, depth) {}
+	Matrix(size_t depth) : Buffer3D<T>(Rows, Cols, depth) {}
 
 	void resize(size_t depth) {
-		Buffer3D::resize(Rows, Cols, depth);
+		Buffer3D<T>::resize(Rows, Cols, depth);
 	}
 
 	size_t rows() const {
-		return width();
+		return Buffer3D<T>::width();
 	}
 
 	size_t cols() const {
-		return height();
+		return Buffer3D<T>::height();
 	}
+
+	using Buffer3D<T>::depth;
 
 	template<typename S>
 	void upload(std::shared_ptr<CommandQueue> queue, const math::Matrix<S, Rows, Cols>& mat, bool blocking = false) {
@@ -48,17 +50,17 @@ public:
 	}
 
 	void download(std::shared_ptr<CommandQueue> queue, math::Matrix<T, Rows, Cols>& mat, bool blocking = true) const {
-		if(width_ != Rows  || height_ != Cols || depth_ != 1) {
+		if(rows() != Rows  || cols() != Cols || depth() != 1) {
 			throw std::logic_error("dimension mismatch");
 		}
 		download(queue, mat.get_data(), blocking);
 	}
 
 	void download(std::shared_ptr<CommandQueue> queue, const std::vector<const math::Matrix<T, Rows, Cols>>& mats, bool blocking = true) const {
-		if(width_ != Rows  || height_ != Cols) {
+		if(rows() != Rows  || cols() != Cols) {
 			throw std::logic_error("dimension mismatch");
 		}
-		mats.resize(depth_);
+		mats.resize(depth());
 		download(queue, mats.data(), blocking);
 	}
 

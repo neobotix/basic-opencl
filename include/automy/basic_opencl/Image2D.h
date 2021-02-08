@@ -26,8 +26,11 @@ public:
 	{
 		format_.image_channel_order = order;
 		format_.image_channel_data_type = type;
+		desc_.image_type = CL_MEM_OBJECT_IMAGE2D;
+		desc_.image_width = width;
+		desc_.image_height = height;
 		cl_int err = 0;
-		data_ = clCreateImage2D(g_context, flags, &format_, width, height, data ? width * sizeof(T) : 0, data, &err);
+		data_ = clCreateImage(g_context, flags, &format_, &desc_, (void*)data, &err);
 		if(err) {
 			throw std::runtime_error("clCreateImage2D() failed with " + get_error_string(err));
 		}
@@ -55,7 +58,9 @@ public:
 private:
 	size_t width_ = 0;
 	size_t height_ = 0;
+
 	cl_image_format format_ = {};
+	cl_image_desc desc_ = {};
 
 };
 

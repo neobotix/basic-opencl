@@ -40,28 +40,30 @@ public:
 	template<typename S>
 	void upload(std::shared_ptr<CommandQueue> queue, const math::Matrix<S, Rows, Cols>& mat, bool blocking = false) {
 		resize(1);
-		math::Matrix<T, Rows, Cols> tmp(mat);
-		upload(queue, tmp.get_data(), blocking);
+		const math::Matrix<T, Rows, Cols> tmp(mat);
+		Buffer3D<T>::upload(queue, tmp.get_data(), blocking);
 	}
 
-	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<const math::Matrix<T, Rows, Cols>>& mats, bool blocking = false) {
+	template<typename S>
+	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<S>& mats, bool blocking = false) {
+		const std::vector<math::Matrix<T, Rows, Cols>> tmp(mats.begin(), mats.end());
 		resize(mats.size());
-		upload(queue, mats.data(), blocking);
+		Buffer3D<T>::upload(queue, tmp[0].get_data(), blocking);
 	}
 
 	void download(std::shared_ptr<CommandQueue> queue, math::Matrix<T, Rows, Cols>& mat, bool blocking = true) const {
 		if(rows() != Rows  || cols() != Cols || depth() != 1) {
 			throw std::logic_error("dimension mismatch");
 		}
-		download(queue, mat.get_data(), blocking);
+		Buffer3D<T>::download(queue, mat.get_data(), blocking);
 	}
 
-	void download(std::shared_ptr<CommandQueue> queue, const std::vector<const math::Matrix<T, Rows, Cols>>& mats, bool blocking = true) const {
+	void download(std::shared_ptr<CommandQueue> queue, std::vector<math::Matrix<T, Rows, Cols>>& mats, bool blocking = true) const {
 		if(rows() != Rows  || cols() != Cols) {
 			throw std::logic_error("dimension mismatch");
 		}
 		mats.resize(depth());
-		download(queue, mats.data(), blocking);
+		Buffer3D<T>::download(queue, mats[0].get_data(), blocking);
 	}
 
 };

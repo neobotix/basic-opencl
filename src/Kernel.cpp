@@ -75,6 +75,11 @@ void Kernel::enqueue(std::shared_ptr<CommandQueue> queue, const size_t& global_s
 	}
 }
 
+void Kernel::enqueue_ceiled(std::shared_ptr<CommandQueue> queue, const size_t& global_size, const size_t& local_size) {
+	const auto global_size_ = global_size + (local_size - (global_size % local_size)) % local_size;
+	enqueue(queue, global_size_, local_size);
+}
+
 void Kernel::enqueue_2D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 2>& global_size) {
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 2, 0, global_size.data(), 0, 0, 0, 0)) {
 		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));

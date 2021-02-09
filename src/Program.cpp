@@ -119,12 +119,14 @@ bool Program::build() {
 		if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, 0, &length)) {
 			throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG, 0, 0) failed with " + get_error_string(err));
 		}
-		std::string log;
-		log.resize(length - 1);
-		if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log.size() + 1, &log[0], &length)) {
-			throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG) failed with " + get_error_string(err));
+		if(length > 2) {
+			std::string log;
+			log.resize(length - 1);
+			if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log.size() + 1, &log[0], &length)) {
+				throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG) failed with " + get_error_string(err));
+			}
+			build_log.push_back(log);
 		}
-		build_log.push_back(log);
 	}
 	return success;
 }
@@ -137,9 +139,7 @@ void Program::print_sources(std::ostream& out) const {
 
 void Program::print_build_log(std::ostream& out) const {
 	for(const std::string& log : build_log) {
-		if(!log.empty()) {
-			out << log << std::endl;
-		}
+		out << log << std::endl;
 	}
 }
 

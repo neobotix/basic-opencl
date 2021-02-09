@@ -35,16 +35,20 @@ public:
 	}
 	
 	void resize(size_t width, size_t height, size_t depth = 1) {
-		if(width * height * depth != size()) {
+		const size_t new_size = width * height * depth;
+		if(new_size != size()) {
 			if(data_) {
 				if(cl_int err = clReleaseMemObject(data_)) {
 					throw std::runtime_error("clReleaseMemObject() failed with " + get_error_string(err));
 				}
+				data_ = 0;
 			}
-			cl_int err = 0;
-			data_ = clCreateBuffer(g_context, 0, width * height * depth * sizeof(T), 0, &err);
-			if(err) {
-				throw std::runtime_error("clCreateBuffer() failed with " + get_error_string(err));
+			if(new_size) {
+				cl_int err = 0;
+				data_ = clCreateBuffer(g_context, 0, width * height * depth * sizeof(T), 0, &err);
+				if(err) {
+					throw std::runtime_error("clCreateBuffer() failed with " + get_error_string(err));
+				}
 			}
 		}
 		width_ = width;
@@ -74,8 +78,10 @@ public:
 
 	void upload(std::shared_ptr<CommandQueue> queue, const T* data, bool blocking = false)
 	{
-		if(cl_int err = clEnqueueWriteBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, size() * sizeof(T), data, 0, 0, 0)) {
-			throw std::runtime_error("clEnqueueWriteBuffer() failed with " + get_error_string(err));
+		if(data_) {
+			if(cl_int err = clEnqueueWriteBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, size() * sizeof(T), data, 0, 0, 0)) {
+				throw std::runtime_error("clEnqueueWriteBuffer() failed with " + get_error_string(err));
+			}
 		}
 	}
 	
@@ -96,8 +102,10 @@ public:
 	
 	void download(std::shared_ptr<CommandQueue> queue, T* data, bool blocking = true) const
 	{
-		if(cl_int err = clEnqueueReadBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, size() * sizeof(T), data, 0, 0, 0)) {
-			throw std::runtime_error("clEnqueueReadBuffer() failed with " + get_error_string(err));
+		if(data_) {
+			if(cl_int err = clEnqueueReadBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, size() * sizeof(T), data, 0, 0, 0)) {
+				throw std::runtime_error("clEnqueueReadBuffer() failed with " + get_error_string(err));
+			}
 		}
 	}
 
@@ -116,15 +124,19 @@ public:
 	
 	void copy_from(std::shared_ptr<CommandQueue> queue, const Buffer3D<T>& other) {
 		resize(other.width(), other.height(), other.depth());
-		if(cl_int err = clEnqueueCopyBuffer(queue->get(), other.data(), data_, 0, 0, size() * sizeof(T), 0, 0, 0)) {
-			throw std::runtime_error("clEnqueueCopyBuffer() failed with " + get_error_string(err));
+		if(data_) {
+			if(cl_int err = clEnqueueCopyBuffer(queue->get(), other.data(), data_, 0, 0, size() * sizeof(T), 0, 0, 0)) {
+				throw std::runtime_error("clEnqueueCopyBuffer() failed with " + get_error_string(err));
+			}
 		}
 	}
 	
 	void set_zero(std::shared_ptr<CommandQueue> queue) {
 		const T zero = T();
-		if(cl_int err = clEnqueueFillBuffer(queue->get(), data_, &zero, sizeof(T), 0, size() * sizeof(T), 0, 0, 0)) {
-			throw std::runtime_error("clEnqueueFillBuffer() failed with " + get_error_string(err));
+		if(data_) {
+			if(cl_int err = clEnqueueFillBuffer(queue->get(), data_, &zero, sizeof(T), 0, size() * sizeof(T), 0, 0, 0)) {
+				throw std::runtime_error("clEnqueueFillBuffer() failed with " + get_error_string(err));
+			}
 		}
 	}
 	

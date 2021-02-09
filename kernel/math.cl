@@ -1,4 +1,16 @@
 
+float square_norm_2(const float2 a) {
+	return (a.x*a.x + a.y*a.y);
+}
+
+float square_norm_3(const float3 a) {
+	return (a.x*a.x + a.y*a.y + a.z*a.z);
+}
+
+float square_norm_4(const float4 a) {
+	return (a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w);
+}
+
 float2 mul_22_2(const float* mat, const float2 b) {
 	float2 res;
 	res.x = mat[0] * b.x + mat[2] * b.y;

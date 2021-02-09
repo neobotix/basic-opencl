@@ -45,10 +45,14 @@ public:
 	
 	void enqueue(std::shared_ptr<CommandQueue> queue, const size_t& global_size);
 	void enqueue(std::shared_ptr<CommandQueue> queue, const size_t& global_size, const size_t& local_size);
+
 	void enqueue_2D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 2>& global_size);
 	void enqueue_2D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 2>& global_size, const std::array<size_t, 2>& local_size);
+	void enqueue_ceiled_2D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 2>& global_size, const std::array<size_t, 2>& local_size);
+
 	void enqueue_3D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 3>& global_size);
 	void enqueue_3D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 3>& global_size, const std::array<size_t, 3>& local_size);
+	void enqueue_ceiled_3D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 3>& global_size, const std::array<size_t, 3>& local_size);
 	
 	void print_info(std::ostream& out);
 	

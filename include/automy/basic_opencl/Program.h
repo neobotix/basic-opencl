@@ -20,6 +20,8 @@ namespace basic_opencl {
 
 class Program;
 
+void add_include_path(const std::string& path);
+
 std::shared_ptr<const Program> get_program(const std::string& name);
 
 void register_program(const std::string& name, std::shared_ptr<const Program> program);
@@ -56,7 +58,7 @@ private:
 	cl_program program = 0;
 	
 	std::vector<std::string> sources;
-	
+
 };
 
 

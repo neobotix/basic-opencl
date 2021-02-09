@@ -26,10 +26,6 @@ public:
 		resize(width, height, depth);
 	}
 	
-	~Buffer3D() {
-		clReleaseMemObject(data_);
-	}
-
 	static std::shared_ptr<Buffer3D<T>> create() {
 		return std::make_shared<Buffer3D<T>>();
 	}

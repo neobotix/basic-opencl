@@ -22,7 +22,7 @@ cl_context g_context = 0;
 std::vector<cl_device_id> g_device_list;
 
 
-void create_context(const std::string& platform_name, cl_device_type device_type) {
+void create_context(cl_device_type device_type, const std::string& platform_name) {
 	std::lock_guard<std::mutex> lock(g_mutex);
 	
 	cl_platform_id platforms[10];
@@ -30,12 +30,12 @@ void create_context(const std::string& platform_name, cl_device_type device_type
 	if(clGetPlatformIDs(10, platforms, &num_platforms)) {
 		throw std::runtime_error("clGetPlatformIDs() failed");
 	}
-	if(!num_platforms){
-		throw std::runtime_error("clGetPlatformIDs() no platforms");
+	if(!num_platforms) {
+		throw std::runtime_error("clGetPlatformIDs(): no platform found");
 	}
 	
 	int selected = -1;
-	for(int i = 0; i < num_platforms; ++i){
+	for(cl_uint i = 0; i < num_platforms; ++i) {
 		char name[1024] = {};
 		if(clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, sizeof(name), name, 0)) {
 			throw std::runtime_error("clGetPlatformInfo() failed");
@@ -50,22 +50,18 @@ void create_context(const std::string& platform_name, cl_device_type device_type
 	}
 	
 	cl_uint num_devices = 0;
-	cl_device_id devices[16];
-	if(clGetDeviceIDs(platforms[selected], device_type, 16, devices, &num_devices)) {
+	g_device_list.resize(16);
+	if(clGetDeviceIDs(platforms[selected], device_type, g_device_list.size(), g_device_list.data(), &num_devices)) {
 		throw std::runtime_error("clGetDeviceIDs() failed");
 	}
-	if(!num_devices){
-		throw std::runtime_error("clGetDeviceIDs() no devices");
+	g_device_list.resize(num_devices);
+
+	if(g_device_list.empty()) {
+		throw std::runtime_error("clGetDeviceIDs(): no device found");
 	}
-	
-	g_device_list.clear();
-	for(int i = 0; i < num_devices; ++i) {
-		g_device_list.push_back(devices[i]);
-	}
-	
 	cl_context_properties props[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[selected], 0};
 	cl_int err = 0;
-	g_context = clCreateContext(props, g_device_list.size(), &g_device_list[0], 0, 0, &err);
+	g_context = clCreateContext(props, g_device_list.size(), g_device_list.data(), 0, 0, &err);
 	if(err) {
 		throw std::runtime_error("clCreateContext() failed with " + get_error_string(err));
 	}
@@ -84,13 +80,12 @@ std::vector<cl_device_id> get_devices() {
 	return g_device_list;
 }
 
-std::shared_ptr<CommandQueue> create_command_queue(int device) {
+std::shared_ptr<CommandQueue> create_command_queue(cl_uint device) {
 	std::lock_guard<std::mutex> lock(g_mutex);
 	
-	if(device < 0 || device > g_device_list.size()) {
-		throw std::logic_error("create_command_queue() no such device");
+	if(device >= g_device_list.size()) {
+		throw std::logic_error("create_command_queue(): no such device");
 	}
-	
 	cl_int err = 0;
 	cl_command_queue queue = clCreateCommandQueue(g_context, g_device_list[device], 0, &err);
 	if(err) {

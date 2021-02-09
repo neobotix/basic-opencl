@@ -14,7 +14,15 @@
 namespace automy {
 namespace basic_opencl {
 
+std::vector<std::string> g_includes;
+
 std::map<std::string, std::shared_ptr<const Program>> g_programs;
+
+
+void add_include_path(const std::string& path) {
+	std::lock_guard<std::mutex> lock(g_mutex);
+	g_includes.push_back(path);
+}
 
 std::shared_ptr<const Program> get_program(const std::string& name) {
 	std::lock_guard<std::mutex> lock(g_mutex);
@@ -45,11 +53,19 @@ Program::~Program() {
 }
 
 void Program::add_source(const std::string& file_name) {
-	std::ifstream in(file_name);
-	if(!in.good()) {
-		throw std::runtime_error("error reading file: '" + file_name + "'");
+	std::vector<std::string> source_dirs {""};
+	{
+		std::lock_guard<std::mutex> lock(g_mutex);
+		source_dirs.insert(source_dirs.end(), g_includes.begin(), g_includes.end());
 	}
-	sources.push_back(std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()));
+	for(const auto& dir : source_dirs) {
+		std::ifstream in(dir + file_name);
+		if(in.good()) {
+			sources.push_back(std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()));
+			return;
+		}
+	}
+	throw std::runtime_error("no such file: '" + file_name + "'");
 }
 
 void Program::create_from_source() {
@@ -75,7 +91,12 @@ bool Program::build() {
 		throw std::logic_error("program == 0");
 	}
 	
-	const std::string options_ = options + " -cl-kernel-arg-info";
+	std::string options_ = options + " -cl-kernel-arg-info";
+	for(const auto& path : g_includes) {
+		if(!path.empty()) {
+			options_ += " -I " + path;
+		}
+	}
 	
 	bool success = true;
 	std::vector<cl_device_id> devices = get_devices();
@@ -95,7 +116,6 @@ bool Program::build() {
 		if(status != CL_BUILD_SUCCESS) {
 			success = false;
 		}
-		
 		if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, 0, &length)) {
 			throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG, 0, 0) failed with " + get_error_string(err));
 		}
@@ -116,8 +136,10 @@ void Program::print_sources(std::ostream& out) const {
 }
 
 void Program::print_build_log(std::ostream& out) const {
-	for(std::string log : build_log) {
-		out << log << std::endl;
+	for(const std::string& log : build_log) {
+		if(!log.empty()) {
+			out << log << std::endl;
+		}
 	}
 }
 

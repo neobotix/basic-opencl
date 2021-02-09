@@ -87,6 +87,14 @@ void Kernel::enqueue_2D(std::shared_ptr<CommandQueue> queue, const std::array<si
 	}
 }
 
+void Kernel::enqueue_ceiled_2D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 2>& global_size, const std::array<size_t, 2>& local_size) {
+	std::array<size_t, 2> global_size_ = global_size;
+	for(int i = 0; i < 2; ++i) {
+		global_size_[i] += (local_size[i] - (global_size[i] % local_size[i])) % local_size[i];
+	}
+	enqueue_2D(queue, global_size_, local_size);
+}
+
 void Kernel::enqueue_3D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 3>& global_size) {
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 3, 0, global_size.data(), 0, 0, 0, 0)) {
 		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
@@ -97,6 +105,14 @@ void Kernel::enqueue_3D(std::shared_ptr<CommandQueue> queue, const std::array<si
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 3, 0, global_size.data(), local_size.data(), 0, 0, 0)) {
 		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
 	}
+}
+
+void Kernel::enqueue_ceiled_3D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 3>& global_size, const std::array<size_t, 3>& local_size) {
+	std::array<size_t, 3> global_size_ = global_size;
+	for(int i = 0; i < 3; ++i) {
+		global_size_[i] += (local_size[i] - (global_size[i] % local_size[i])) % local_size[i];
+	}
+	enqueue_3D(queue, global_size_, local_size);
 }
 
 void Kernel::print_info(std::ostream& out) {

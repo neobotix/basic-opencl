@@ -17,3 +17,10 @@ target_include_directories(automy_basic_opencl
 target_link_libraries(automy_basic_opencl
 	automy_basic automy_math OpenCL
 )
+
+install(DIRECTORY kernel/ DESTINATION kernel)
+install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY generated/include/ DESTINATION include)
+install(DIRECTORY interface/ DESTINATION interface/automy/basic_opencl)
+
+install(TARGETS automy_basic_opencl DESTINATION lib)

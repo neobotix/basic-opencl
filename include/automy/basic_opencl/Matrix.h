@@ -38,17 +38,17 @@ public:
 	using Buffer3D<T>::depth;
 
 	template<typename S>
-	void upload(std::shared_ptr<CommandQueue> queue, const math::Matrix<S, Rows, Cols>& mat, bool blocking = false) {
+	void upload(std::shared_ptr<CommandQueue> queue, const math::Matrix<S, Rows, Cols>& mat) {
 		resize(1);
 		const math::Matrix<T, Rows, Cols> tmp(mat);
-		Buffer3D<T>::upload(queue, tmp.get_data(), blocking);
+		Buffer3D<T>::upload(queue, tmp.get_data(), true);
 	}
 
 	template<typename S>
-	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<S>& mats, bool blocking = false) {
+	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<S>& mats) {
 		const std::vector<math::Matrix<T, Rows, Cols>> tmp(mats.begin(), mats.end());
 		resize(mats.size());
-		Buffer3D<T>::upload(queue, tmp[0].get_data(), blocking);
+		Buffer3D<T>::upload(queue, tmp[0].get_data(), true);
 	}
 
 	void download(std::shared_ptr<CommandQueue> queue, math::Matrix<T, Rows, Cols>& mat, bool blocking = true) const {

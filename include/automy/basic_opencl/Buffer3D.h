@@ -72,36 +72,30 @@ public:
 		return width_ * height_ * depth_;
 	}
 	
-	cl_mem data() const {
-		return data_;
-	}
-
-	void upload(std::shared_ptr<CommandQueue> queue, const T* data, bool blocking = false)
-	{
+	void upload(std::shared_ptr<CommandQueue> queue, const T* data, bool copy = true) {
 		if(data_) {
-			if(cl_int err = clEnqueueWriteBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, size() * sizeof(T), data, 0, 0, 0)) {
+			if(cl_int err = clEnqueueWriteBuffer(queue->get(), data_, copy ? CL_TRUE : CL_FALSE, 0, size() * sizeof(T), data, 0, 0, 0)) {
 				throw std::runtime_error("clEnqueueWriteBuffer() failed with " + get_error_string(err));
 			}
 		}
 	}
 	
-	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<T>& vec, bool blocking = false) {
+	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<T>& vec, bool copy = true) {
 		resize(vec.size(), 1);
-		upload(queue, vec.get_data(), blocking);
+		upload(queue, vec.get_data(), copy);
 	}
 	
-	void upload(std::shared_ptr<CommandQueue> queue, const basic::Image<T>& img, bool blocking = false) {
+	void upload(std::shared_ptr<CommandQueue> queue, const basic::Image<T>& img, bool copy = true) {
 		resize(img.width(), img.height(), img.depth());
-		upload(queue, img.get_data(), blocking);
+		upload(queue, img.get_data(), copy);
 	}
 	
-	void upload(std::shared_ptr<CommandQueue> queue, const math::MatrixX<T>& mat, bool blocking = false) {
+	void upload(std::shared_ptr<CommandQueue> queue, const math::MatrixX<T>& mat, bool copy = true) {
 		resize(mat.rows(), mat.cols());
-		upload(queue, mat.get_data(), blocking);
+		upload(queue, mat.get_data(), copy);
 	}
 	
-	void download(std::shared_ptr<CommandQueue> queue, T* data, bool blocking = true) const
-	{
+	void download(std::shared_ptr<CommandQueue> queue, T* data, bool blocking = true) const {
 		if(data_) {
 			if(cl_int err = clEnqueueReadBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, size() * sizeof(T), data, 0, 0, 0)) {
 				throw std::runtime_error("clEnqueueReadBuffer() failed with " + get_error_string(err));

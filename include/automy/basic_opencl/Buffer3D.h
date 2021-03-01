@@ -45,7 +45,7 @@ public:
 			}
 			if(new_size) {
 				cl_int err = 0;
-				data_ = clCreateBuffer(g_context, 0, width * height * depth * sizeof(T), 0, &err);
+				data_ = clCreateBuffer(g_context, 0, width * height * depth * sizeof(T), nullptr, &err);
 				if(err) {
 					throw std::runtime_error("clCreateBuffer() failed with " + get_error_string(err));
 				}

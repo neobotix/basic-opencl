@@ -89,3 +89,45 @@ void mul_NM_T_K(int N, int M, int K, float* Y, const float* A, const float* B) {
 	}
 }
 
+void get_rotate2(float* mat, const float radians) {
+	mat[0] = cos(radians);
+	mat[1] = sin(radians);
+	mat[2] = -sin(radians);
+	mat[3] = cos(radians);
+}
+
+float2 vec_rotate2(const float2 b, const float radians) {
+	float mat[4];
+	get_rotate2(mat, radians);
+	return mul_22_2(mat, b);
+}
+
+void transform2(float* mat, const float3 pose) {
+	mat[0 + 0 * 3] = cos(pose.z);
+	mat[1 + 0 * 3] = sin(pose.z);
+	mat[2 + 0 * 3] = 0;
+	mat[0 + 1 * 3] = -sin(pose.z);
+	mat[1 + 1 * 3] = cos(pose.z);
+	mat[2 + 1 * 3] = 0;
+	mat[0 + 2 * 3] = pose.x;
+	mat[1 + 2 * 3] = pose.y;
+	mat[2 + 2 * 3] = 1;
+}
+
+void inverse_33(float* A_inv, const float* A) {
+	const float det = 	A[0 + 0 * 3] * (A[1 + 1 * 3] * A[2 + 2 * 3] - A[2 + 1 * 3] * A[1 + 2 * 3]) -
+						A[0 + 1 * 3] * (A[1 + 0 * 3] * A[2 + 2 * 3] - A[1 + 2 * 3] * A[2 + 0 * 3]) +
+						A[0 + 2 * 3] * (A[1 + 0 * 3] * A[2 + 1 * 3] - A[1 + 1 * 3] * A[2 + 0 * 3]);
+	const float inv_det = 1.f / det;
+	A_inv[0 + 0 * 3] = (A[1 + 1 * 3] * A[2 + 2 * 3] - A[2 + 1 * 3] * A[1 + 2 * 3]) * inv_det;
+	A_inv[0 + 1 * 3] = (A[0 + 2 * 3] * A[2 + 1 * 3] - A[0 + 1 * 3] * A[2 + 2 * 3]) * inv_det;
+	A_inv[0 + 2 * 3] = (A[0 + 1 * 3] * A[1 + 2 * 3] - A[0 + 2 * 3] * A[1 + 1 * 3]) * inv_det;
+	A_inv[1 + 0 * 3] = (A[1 + 2 * 3] * A[2 + 0 * 3] - A[1 + 0 * 3] * A[2 + 2 * 3]) * inv_det;
+	A_inv[1 + 1 * 3] = (A[0 + 0 * 3] * A[2 + 2 * 3] - A[0 + 2 * 3] * A[2 + 0 * 3]) * inv_det;
+	A_inv[1 + 2 * 3] = (A[1 + 0 * 3] * A[0 + 2 * 3] - A[0 + 0 * 3] * A[1 + 2 * 3]) * inv_det;
+	A_inv[2 + 0 * 3] = (A[1 + 0 * 3] * A[2 + 1 * 3] - A[2 + 0 * 3] * A[1 + 1 * 3]) * inv_det;
+	A_inv[2 + 1 * 3] = (A[2 + 0 * 3] * A[0 + 1 * 3] - A[0 + 0 * 3] * A[2 + 1 * 3]) * inv_det;
+	A_inv[2 + 2 * 3] = (A[0 + 0 * 3] * A[1 + 1 * 3] - A[1 + 0 * 3] * A[0 + 1 * 3]) * inv_det;
+}
+
+

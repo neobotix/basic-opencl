@@ -25,9 +25,10 @@ std::vector<cl_device_id> g_device_list;
 void create_context(cl_device_type device_type, const std::string& platform_name) {
 	std::lock_guard<std::mutex> lock(g_mutex);
 	
-	cl_platform_id platforms[10];
+	constexpr int MAXN_PLATFORM = 10;
+	cl_platform_id platforms[MAXN_PLATFORM];
 	cl_uint num_platforms = 0;
-	if(clGetPlatformIDs(10, platforms, &num_platforms)) {
+	if(clGetPlatformIDs(MAXN_PLATFORM, platforms, &num_platforms)) {
 		throw std::runtime_error("clGetPlatformIDs() failed");
 	}
 	if(!num_platforms) {
@@ -68,10 +69,12 @@ void create_context(cl_device_type device_type, const std::string& platform_name
 }
 
 void release_context() {
+	std::lock_guard<std::mutex> lock(g_mutex);
 	if(g_context) {
 		if(cl_int err = clReleaseContext(g_context)) {
 			throw std::runtime_error("clReleaseContext() failed with " + get_error_string(err));
 		}
+		g_context = nullptr;
 	}
 }
 

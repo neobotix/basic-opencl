@@ -90,14 +90,12 @@ bool Program::build() {
 	if(!program) {
 		throw std::logic_error("program == 0");
 	}
+	std::lock_guard<std::mutex> lock(g_mutex);
 	
 	std::string options_ = options + " -cl-kernel-arg-info";
-	{
-		std::lock_guard<std::mutex> lock(g_mutex);
-		for(const auto& path : g_includes) {
-			if(!path.empty()) {
-				options_ += " -I " + path;
-			}
+	for(const auto& path : g_includes) {
+		if(!path.empty()) {
+			options_ += " -I " + path;
 		}
 	}
 	

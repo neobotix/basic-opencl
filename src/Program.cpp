@@ -90,22 +90,27 @@ bool Program::build() {
 	if(!program) {
 		throw std::logic_error("program == 0");
 	}
-	std::lock_guard<std::mutex> lock(g_mutex);
 	
 	std::string options_ = options + " -cl-kernel-arg-info";
-	for(const auto& path : g_includes) {
-		if(!path.empty()) {
-			options_ += " -I " + path;
+	{
+		std::lock_guard<std::mutex> lock(g_mutex);
+		for(const auto& path : g_includes) {
+			if(!path.empty()) {
+				options_ += " -I " + path;
+			}
 		}
 	}
 	
 	bool success = true;
 	std::vector<cl_device_id> devices = get_devices();
-	if(cl_int err = clBuildProgram(program, devices.size(), &devices[0], options_.c_str(), 0, 0)) {
-		if(err != CL_BUILD_PROGRAM_FAILURE) {
-			throw std::runtime_error("clBuildProgram() failed with " + get_error_string(err));
+	{
+		std::lock_guard<std::mutex> lock(g_mutex);
+		if(cl_int err = clBuildProgram(program, devices.size(), &devices[0], options_.c_str(), 0, 0)) {
+			if(err != CL_BUILD_PROGRAM_FAILURE) {
+				throw std::runtime_error("clBuildProgram() failed with " + get_error_string(err));
+			}
+			success = false;
 		}
-		success = false;
 	}
 	
 	for(cl_device_id device : devices) {

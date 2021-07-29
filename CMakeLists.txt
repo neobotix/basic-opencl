@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 project(automy-basic-opencl)
+add_compile_options(-DNOGDI)
 
 file(GLOB GENERATED_SOURCE_FILES generated/src/*.cpp)
 

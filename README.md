@@ -1,6 +1,6 @@
 # basic-opencl
 OpenCL wrapper for C++
 
-# Depends
+## Depends
 
 ocl-icd-opencl-dev

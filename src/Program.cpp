@@ -8,20 +8,21 @@
 #include <automy/basic_opencl/Program.h>
 
 #include <map>
+#include <set>
 #include <fstream>
 
 
 namespace automy {
 namespace basic_opencl {
 
-std::vector<std::string> g_includes;
+std::set<std::string> g_includes;
 
 std::map<std::string, std::shared_ptr<const Program>> g_programs;
 
 
 void add_include_path(const std::string& path) {
 	std::lock_guard<std::mutex> lock(g_mutex);
-	g_includes.push_back(path);
+	g_includes.insert(path);
 }
 
 std::shared_ptr<const Program> get_program(const std::string& name) {

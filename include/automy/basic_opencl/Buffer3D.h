@@ -10,8 +10,13 @@
 
 #include <automy/basic_opencl/Buffer.h>
 
+#ifdef WITH_AUTOMY_BASIC
 #include <automy/basic/Image.hpp>
+#endif
+
+#ifdef WITH_AUTOMY_MATH
 #include <automy/math/MatrixX.hpp>
+#endif
 
 
 namespace automy {
@@ -82,17 +87,7 @@ public:
 	
 	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<T>& vec, bool copy = true) {
 		resize(vec.size(), 1);
-		upload(queue, vec.get_data(), copy);
-	}
-	
-	void upload(std::shared_ptr<CommandQueue> queue, const basic::Image<T>& img, bool copy = true) {
-		resize(img.width(), img.height(), img.depth());
-		upload(queue, img.get_data(), copy);
-	}
-	
-	void upload(std::shared_ptr<CommandQueue> queue, const math::MatrixX<T>& mat, bool copy = true) {
-		resize(mat.rows(), mat.cols());
-		upload(queue, mat.get_data(), copy);
+		upload(queue, vec.data(), copy);
 	}
 	
 	void download(std::shared_ptr<CommandQueue> queue, T* data, bool blocking = true) const {
@@ -103,11 +98,24 @@ public:
 		}
 	}
 
+#ifdef WITH_AUTOMY_BASIC
+	void upload(std::shared_ptr<CommandQueue> queue, const basic::Image<T>& img, bool copy = true) {
+		resize(img.width(), img.height(), img.depth());
+		upload(queue, img.get_data(), copy);
+	}
+
 	void download(std::shared_ptr<CommandQueue> queue, basic::Image<T>& img, bool blocking = true) const {
 		img.resize(width_, height_, depth_);
 		download(queue, img.get_data(), blocking);
 	}
-	
+#endif
+
+#ifdef WITH_AUTOMY_MATH
+	void upload(std::shared_ptr<CommandQueue> queue, const math::MatrixX<T>& mat, bool copy = true) {
+		resize(mat.rows(), mat.cols());
+		upload(queue, mat.get_data(), copy);
+	}
+
 	void download(std::shared_ptr<CommandQueue> queue, math::MatrixX<T>& mat, bool blocking = true) const {
 		if(depth_ != 1) {
 			throw std::logic_error("dimension mismatch");
@@ -115,6 +123,7 @@ public:
 		mat.resize(width_, height_);
 		download(queue, mat.get_data(), blocking);
 	}
+#endif
 	
 	void copy_from(std::shared_ptr<CommandQueue> queue, const Buffer3D<T>& other) {
 		resize(other.width(), other.height(), other.depth());

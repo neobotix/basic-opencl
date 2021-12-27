@@ -15,10 +15,6 @@ target_include_directories(automy_basic_opencl
 	PUBLIC include
 )
 
-target_compile_definitions(automy_basic_opencl
-	PUBLIC CL_TARGET_OPENCL_VERSION=120
-)
-
 target_link_libraries(automy_basic_opencl
 	OpenCL
 )

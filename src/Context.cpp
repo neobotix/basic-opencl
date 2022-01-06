@@ -53,6 +53,7 @@ void create_context(cl_device_type device_type, const std::string& platform_name
 	cl_uint num_devices = 0;
 	g_device_list.resize(16);
 	if(clGetDeviceIDs(platforms[selected], device_type, g_device_list.size(), g_device_list.data(), &num_devices)) {
+		g_device_list.clear();
 		throw std::runtime_error("clGetDeviceIDs() failed");
 	}
 	g_device_list.resize(num_devices);

@@ -4,10 +4,7 @@ project(automy-basic-opencl)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-file(GLOB GENERATED_SOURCE_FILES generated/src/*.cpp)
-
 add_library(automy_basic_opencl SHARED
-	${GENERATED_SOURCE_FILES}
 	src/Context.cpp
 	src/Kernel.cpp
 	src/Program.cpp

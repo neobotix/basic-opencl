@@ -27,10 +27,6 @@ if(MSVC)
 	set_target_properties(automy_basic_opencl PROPERTIES ENABLE_EXPORTS ON)
 	set_target_properties(automy_basic_opencl PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-	find_library(OpenCL_LIBRARY OpenCL HINTS ${OpenCL_LIBRARIES})
-	add_library(OpenCL INTERFACE IMPORTED)
-	set_target_properties(OpenCL PROPERTIES INTERFACE_LINK_LIBRARIES "${OpenCL_LIBRARY}")
-
 	target_include_directories(automy_basic_opencl
 		PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${OpenCL_INCLUDE_DIR}
 	)

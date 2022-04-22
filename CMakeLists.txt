@@ -15,7 +15,7 @@ target_include_directories(automy_basic_opencl
 )
 
 target_link_libraries(automy_basic_opencl
-	OpenCL
+	OpenCL::OpenCL
 )
 
 target_compile_definitions(automy_basic_opencl PUBLIC NOGDI)
@@ -28,7 +28,7 @@ if(MSVC)
 	set_target_properties(automy_basic_opencl PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 	target_include_directories(automy_basic_opencl
-		PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${OpenCL_INCLUDE_DIR}
+		PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
 	)
 endif()
 

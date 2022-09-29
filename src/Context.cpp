@@ -84,6 +84,15 @@ std::vector<cl_device_id> get_devices() {
 	return g_device_list;
 }
 
+std::string get_device_name(cl_device_id id) {
+	char dev_name[256] = {};
+	size_t dev_name_len = 0;
+	if(cl_int err = clGetDeviceInfo(id, CL_DEVICE_NAME, sizeof(dev_name), dev_name, &dev_name_len)) {
+		throw std::runtime_error("clGetDeviceInfo() failed with " + get_error_string(err));
+	}
+	return std::string(dev_name, dev_name_len > 0 ? dev_name_len - 1 : 0);
+}
+
 std::shared_ptr<CommandQueue> create_command_queue(cl_uint device) {
 	std::lock_guard<std::mutex> lock(g_mutex);
 	

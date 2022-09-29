@@ -40,6 +40,8 @@ void release_context();
 
 std::vector<cl_device_id> get_devices();
 
+std::string get_device_name(cl_device_id id);
+
 std::shared_ptr<CommandQueue> create_command_queue(cl_uint device);
 
 std::string get_error_string(cl_int error);

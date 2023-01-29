@@ -126,12 +126,13 @@ bool Program::build() {
 		if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, 0, &length)) {
 			throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG, 0, 0) failed with " + get_error_string(err));
 		}
-		if(length > 2) {
+		if(length > 0) {
 			std::string log;
-			log.resize(length - 1);
-			if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log.size() + 1, &log[0], &length)) {
+			log.resize(length);
+			if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log.size(), &log[0], &length)) {
 				throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG) failed with " + get_error_string(err));
 			}
+			log.resize(length - 1);
 			build_log.push_back(log);
 		}
 	}

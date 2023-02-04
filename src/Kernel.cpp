@@ -25,7 +25,9 @@ Kernel::Kernel(cl_kernel kernel_)
 	if(cl_int err = clGetKernelInfo(kernel, CL_KERNEL_FUNCTION_NAME, name.size(), &name[0], &length)) {
 		throw std::runtime_error("clGetKernelInfo(CL_KERNEL_FUNCTION_NAME) failed with " + get_error_string(err));
 	}
-	name.resize(length - 1);
+	if(length) {
+		name.resize(length - 1);
+	}
 	
 	cl_uint num_args = 0;
 	if(cl_int err = clGetKernelInfo(kernel, CL_KERNEL_NUM_ARGS, sizeof(num_args), &num_args, &length)) {
@@ -44,7 +46,9 @@ Kernel::Kernel(cl_kernel kernel_)
 		if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, arg.size(), &arg[0], &length)) {
 			throw std::runtime_error("clGetKernelArgInfo(CL_KERNEL_ARG_NAME) failed with " + get_error_string(err));
 		}
-		arg.resize(length - 1);
+		if(length) {
+			arg.resize(length - 1);
+		}
 		arg_list.push_back(arg);
 		arg_map[arg] = i;
 	}

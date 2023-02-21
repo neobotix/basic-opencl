@@ -15,21 +15,20 @@ namespace basic_opencl {
 
 std::mutex g_mutex;
 
-cl_platform_id g_platform = 0;
+cl_context g_context = nullptr;
 
-cl_context g_context = 0;
+cl_platform_id g_platform = nullptr;
 
 std::vector<cl_device_id> g_device_list;
 
 
-void create_context(cl_device_type device_type, const std::string& platform_name) {
-	std::lock_guard<std::mutex> lock(g_mutex);
-	
-	constexpr int MAXN_PLATFORM = 10;
+cl_context create_context(cl_device_type device_type, const std::string& platform_name, cl_platform_id* p_platform)
+{
+	constexpr int MAXN_PLATFORM = 16;
 	cl_platform_id platforms[MAXN_PLATFORM];
 	cl_uint num_platforms = 0;
-	if(clGetPlatformIDs(MAXN_PLATFORM, platforms, &num_platforms)) {
-		throw std::runtime_error("clGetPlatformIDs() failed");
+	if(cl_int err = clGetPlatformIDs(MAXN_PLATFORM, platforms, &num_platforms)) {
+		throw std::runtime_error("clGetPlatformIDs() failed with: " + get_error_string(err));
 	}
 	if(!num_platforms) {
 		throw std::runtime_error("clGetPlatformIDs(): no platform found");
@@ -41,7 +40,7 @@ void create_context(cl_device_type device_type, const std::string& platform_name
 		if(clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, sizeof(name), name, 0)) {
 			throw std::runtime_error("clGetPlatformInfo() failed");
 		}
-		if(std::string(name) == platform_name){
+		if(std::string(name) == platform_name) {
 			selected = i;
 			break;
 		}
@@ -49,39 +48,57 @@ void create_context(cl_device_type device_type, const std::string& platform_name
 	if(selected < 0) {
 		selected = 0;
 	}
-	
-	cl_uint num_devices = 0;
-	g_device_list.resize(16);
-	if(clGetDeviceIDs(platforms[selected], device_type, g_device_list.size(), g_device_list.data(), &num_devices)) {
-		g_device_list.clear();
-		throw std::runtime_error("clGetDeviceIDs() failed");
-	}
-	g_device_list.resize(num_devices);
+	const auto platform = platforms[selected];
+	const auto device_list = get_devices(platform, device_type);
 
-	if(g_device_list.empty()) {
+	if(device_list.empty()) {
 		throw std::runtime_error("clGetDeviceIDs(): no device found");
 	}
-	cl_context_properties props[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[selected], 0};
+	cl_context_properties props[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0};
 	cl_int err = 0;
-	g_context = clCreateContext(props, g_device_list.size(), g_device_list.data(), 0, 0, &err);
+	const auto context = clCreateContext(props, device_list.size(), device_list.data(), 0, 0, &err);
 	if(err) {
 		throw std::runtime_error("clCreateContext() failed with " + get_error_string(err));
 	}
+	if(p_platform) {
+		*p_platform = platform;
+	} else {
+		std::lock_guard<std::mutex> lock(g_mutex);
+		g_context = context;
+		g_platform = platform;
+		g_device_list = device_list;
+	}
+	return context;
 }
 
 void release_context() {
 	std::lock_guard<std::mutex> lock(g_mutex);
-	if(g_context) {
-		if(cl_int err = clReleaseContext(g_context)) {
+	release_context(g_context);
+	g_context = nullptr;
+}
+
+void release_context(cl_context context) {
+	if(context) {
+		if(cl_int err = clReleaseContext(context)) {
 			throw std::runtime_error("clReleaseContext() failed with " + get_error_string(err));
 		}
-		g_context = nullptr;
 	}
 }
 
 std::vector<cl_device_id> get_devices() {
 	std::lock_guard<std::mutex> lock(g_mutex);
 	return g_device_list;
+}
+
+std::vector<cl_device_id> get_devices(cl_platform_id platform, cl_device_type device_type) {
+	cl_uint num_devices = 0;
+	std::vector<cl_device_id> device_list(256);
+	if(cl_int err = clGetDeviceIDs(platform, device_type, g_device_list.size(), g_device_list.data(), &num_devices)) {
+		g_device_list.clear();
+		throw std::runtime_error("clGetDeviceIDs() failed with: " + get_error_string(err));
+	}
+	device_list.resize(num_devices);
+	return device_list;
 }
 
 std::string get_device_name(cl_device_id id) {
@@ -99,8 +116,12 @@ std::shared_ptr<CommandQueue> create_command_queue(cl_uint device) {
 	if(device >= g_device_list.size()) {
 		throw std::logic_error("create_command_queue(): no such device");
 	}
+	return create_command_queue(g_device_list[device]);
+}
+
+std::shared_ptr<CommandQueue> create_command_queue(cl_device_id device) {
 	cl_int err = 0;
-	cl_command_queue queue = clCreateCommandQueue(g_context, g_device_list[device], 0, &err);
+	cl_command_queue queue = clCreateCommandQueue(g_context, device, 0, &err);
 	if(err) {
 		throw std::logic_error("clCreateCommandQueue() failed with " + get_error_string(err));
 	}

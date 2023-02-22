@@ -13,44 +13,40 @@
 namespace automy {
 namespace basic_opencl {
 
-std::mutex g_mutex;
-
-cl_context g_context = nullptr;
-
-cl_platform_id g_platform = nullptr;
-
-std::vector<cl_device_id> g_device_list;
-
-
-cl_context create_context(cl_device_type device_type, const std::string& platform_name, cl_platform_id* p_platform)
+std::vector<cl_platform_id> get_platforms()
 {
-	constexpr int MAXN_PLATFORM = 16;
-	cl_platform_id platforms[MAXN_PLATFORM];
 	cl_uint num_platforms = 0;
-	if(cl_int err = clGetPlatformIDs(MAXN_PLATFORM, platforms, &num_platforms)) {
+	std::vector<cl_platform_id> platforms(16);
+
+	if(cl_int err = clGetPlatformIDs(platforms.size(), platforms.data(), &num_platforms)) {
 		throw std::runtime_error("clGetPlatformIDs() failed with: " + get_error_string(err));
 	}
-	if(!num_platforms) {
-		throw std::runtime_error("clGetPlatformIDs(): no platform found");
-	}
-	
-	int selected = -1;
-	for(cl_uint i = 0; i < num_platforms; ++i) {
-		char name[1024] = {};
-		if(clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, sizeof(name), name, 0)) {
-			throw std::runtime_error("clGetPlatformInfo() failed");
-		}
-		if(std::string(name) == platform_name) {
-			selected = i;
-			break;
-		}
-	}
-	if(selected < 0) {
-		selected = 0;
-	}
-	const auto platform = platforms[selected];
-	const auto device_list = get_devices(platform, device_type);
+	platforms.resize(num_platforms);
+	return platforms;
+}
 
+std::string get_platform_name(cl_platform_id platform)
+{
+	char name[1024] = {};
+	if(clGetPlatformInfo(platform, CL_PLATFORM_NAME, sizeof(name), name, 0)) {
+		throw std::runtime_error("clGetPlatformInfo() failed");
+	}
+	return std::string(name);
+}
+
+cl_platform_id find_platform_by_name(const std::string& name)
+{
+	for(auto platform : get_platforms()) {
+		if(get_platform_name(platform) == name) {
+			return platform;
+		}
+	}
+	return nullptr;
+}
+
+cl_context create_context(cl_platform_id platform, cl_device_type device_type)
+{
+	const auto device_list = get_devices(platform, device_type);
 	if(device_list.empty()) {
 		throw std::runtime_error("clGetDeviceIDs(): no device found");
 	}
@@ -60,75 +56,62 @@ cl_context create_context(cl_device_type device_type, const std::string& platfor
 	if(err) {
 		throw std::runtime_error("clCreateContext() failed with " + get_error_string(err));
 	}
-	if(p_platform) {
-		*p_platform = platform;
-	} else {
-		std::lock_guard<std::mutex> lock(g_mutex);
-		g_context = context;
-		g_platform = platform;
-		g_device_list = device_list;
-	}
 	return context;
 }
 
-void release_context() {
-	std::lock_guard<std::mutex> lock(g_mutex);
-	release_context(g_context);
-	g_context = nullptr;
-}
-
-void release_context(cl_context context) {
+void release_context(cl_context& context)
+{
 	if(context) {
 		if(cl_int err = clReleaseContext(context)) {
 			throw std::runtime_error("clReleaseContext() failed with " + get_error_string(err));
 		}
+		context = nullptr;
 	}
 }
 
-std::vector<cl_device_id> get_devices() {
-	std::lock_guard<std::mutex> lock(g_mutex);
-	return g_device_list;
-}
-
-std::vector<cl_device_id> get_devices(cl_platform_id platform, cl_device_type device_type) {
+std::vector<cl_device_id> get_devices(cl_platform_id platform, cl_device_type device_type)
+{
 	cl_uint num_devices = 0;
 	std::vector<cl_device_id> device_list(256);
-	if(cl_int err = clGetDeviceIDs(platform, device_type, g_device_list.size(), g_device_list.data(), &num_devices)) {
-		g_device_list.clear();
+	if(cl_int err = clGetDeviceIDs(platform, device_type, device_list.size(), device_list.data(), &num_devices)) {
+		device_list.clear();
 		throw std::runtime_error("clGetDeviceIDs() failed with: " + get_error_string(err));
 	}
 	device_list.resize(num_devices);
 	return device_list;
 }
 
-std::string get_device_name(cl_device_id id) {
+cl_device_id get_device(cl_platform_id platform, cl_device_type device_type, cl_uint device)
+{
+	const auto device_list = get_devices(platform, device_type);
+	if(device >= device_list.size()) {
+		throw std::runtime_error("no such OpenCL device: " + std::to_string(device));
+	}
+	return device_list[device];
+}
+
+std::string get_device_name(cl_device_id device_id)
+{
 	char dev_name[256] = {};
 	size_t dev_name_len = 0;
-	if(cl_int err = clGetDeviceInfo(id, CL_DEVICE_NAME, sizeof(dev_name), dev_name, &dev_name_len)) {
+	if(cl_int err = clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(dev_name), dev_name, &dev_name_len)) {
 		throw std::runtime_error("clGetDeviceInfo() failed with " + get_error_string(err));
 	}
 	return std::string(dev_name, dev_name_len > 0 ? dev_name_len - 1 : 0);
 }
 
-std::shared_ptr<CommandQueue> create_command_queue(cl_uint device) {
-	std::lock_guard<std::mutex> lock(g_mutex);
-	
-	if(device >= g_device_list.size()) {
-		throw std::logic_error("create_command_queue(): no such device");
-	}
-	return create_command_queue(g_device_list[device]);
-}
-
-std::shared_ptr<CommandQueue> create_command_queue(cl_device_id device) {
+std::shared_ptr<CommandQueue> create_command_queue(cl_context context, cl_device_id device)
+{
 	cl_int err = 0;
-	cl_command_queue queue = clCreateCommandQueue(g_context, device, 0, &err);
+	cl_command_queue queue = clCreateCommandQueue(context, device, 0, &err);
 	if(err) {
 		throw std::logic_error("clCreateCommandQueue() failed with " + get_error_string(err));
 	}
 	return CommandQueue::create(queue);
 }
 
-std::string get_error_string(cl_int error) {
+std::string get_error_string(cl_int error)
+{
 	switch(error){
 		// run-time and JIT compiler errors
 		case 0: return "CL_SUCCESS";

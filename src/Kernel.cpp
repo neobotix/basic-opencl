@@ -11,7 +11,7 @@
 namespace automy {
 namespace basic_opencl {
 
-Kernel::Kernel(cl_kernel kernel_)
+Kernel::Kernel(cl_kernel kernel_, bool with_arg_map)
 	:	kernel(kernel_)
 {
 	size_t length = 0;
@@ -29,28 +29,30 @@ Kernel::Kernel(cl_kernel kernel_)
 		name.resize(length - 1);
 	}
 	
-	cl_uint num_args = 0;
-	if(cl_int err = clGetKernelInfo(kernel, CL_KERNEL_NUM_ARGS, sizeof(num_args), &num_args, &length)) {
-		throw std::runtime_error("clGetKernelInfo(CL_KERNEL_NUM_ARGS) failed with " + get_error_string(err));
-	}
-	
-	for(cl_uint i = 0; i < num_args; ++i) {
-		if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, 0, 0, &length)) {
-			throw std::runtime_error("clGetKernelArgInfo(CL_KERNEL_ARG_NAME, 0, 0) failed with " + get_error_string(err));
+	if(with_arg_map) {
+		cl_uint num_args = 0;
+		if(cl_int err = clGetKernelInfo(kernel, CL_KERNEL_NUM_ARGS, sizeof(num_args), &num_args, &length)) {
+			throw std::runtime_error("clGetKernelInfo(CL_KERNEL_NUM_ARGS) failed with " + get_error_string(err));
 		}
-		if(!length) {
-			throw std::runtime_error("kernel argument name too short");
+
+		for(cl_uint i = 0; i < num_args; ++i) {
+			if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, 0, 0, &length)) {
+				throw std::runtime_error("clGetKernelArgInfo(CL_KERNEL_ARG_NAME, 0, 0) failed with " + get_error_string(err));
+			}
+			if(!length) {
+				throw std::runtime_error("kernel argument name too short");
+			}
+			std::string arg;
+			arg.resize(length);
+			if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, arg.size(), &arg[0], &length)) {
+				throw std::runtime_error("clGetKernelArgInfo(CL_KERNEL_ARG_NAME) failed with " + get_error_string(err));
+			}
+			if(length) {
+				arg.resize(length - 1);
+			}
+			arg_list.push_back(arg);
+			arg_map[arg] = i;
 		}
-		std::string arg;
-		arg.resize(length);
-		if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, arg.size(), &arg[0], &length)) {
-			throw std::runtime_error("clGetKernelArgInfo(CL_KERNEL_ARG_NAME) failed with " + get_error_string(err));
-		}
-		if(length) {
-			arg.resize(length - 1);
-		}
-		arg_list.push_back(arg);
-		arg_map[arg] = i;
 	}
 }
 
@@ -60,8 +62,8 @@ Kernel::~Kernel() {
 	}
 }
 
-std::shared_ptr<Kernel> Kernel::create(cl_kernel kernel) {
-	return std::make_shared<Kernel>(kernel);
+std::shared_ptr<Kernel> Kernel::create(cl_kernel kernel, bool with_arg_map) {
+	return std::make_shared<Kernel>(kernel, with_arg_map);
 }
 
 void Kernel::set_local(const std::string& arg, const size_t& num_bytes) {

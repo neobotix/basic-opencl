@@ -19,8 +19,8 @@ class Buffer1D : public Buffer {
 public:
 	Buffer1D() {}
 
-	Buffer1D(size_t width, cl_mem_flags flags = 0) {
-		alloc(width, flags);
+	Buffer1D(cl_context context, size_t width, cl_mem_flags flags = 0) {
+		alloc(context, width, flags);
 	}
 
 	static std::shared_ptr<Buffer1D<T>> create() {
@@ -31,7 +31,7 @@ public:
 		return std::make_shared<Buffer1D<T>>(width, flags);
 	}
 
-	void alloc(size_t new_size, cl_mem_flags flags = 0) {
+	void alloc(cl_context context, size_t new_size, cl_mem_flags flags = 0) {
 		if(new_size != size() || flags != flags_) {
 			if(data_) {
 				if(cl_int err = clReleaseMemObject(data_)) {
@@ -41,7 +41,7 @@ public:
 			}
 			if(new_size) {
 				cl_int err = 0;
-				data_ = clCreateBuffer(g_context, flags, new_size * sizeof(T), nullptr, &err);
+				data_ = clCreateBuffer(context, flags, new_size * sizeof(T), nullptr, &err);
 				if(err) {
 					throw std::runtime_error("clCreateBuffer() failed with " + get_error_string(err));
 				}
@@ -51,9 +51,9 @@ public:
 		flags_ = flags;
 	}
 
-	void alloc_min(size_t min_size, cl_mem_flags flags = 0) {
+	void alloc_min(cl_context context, size_t min_size, cl_mem_flags flags = 0) {
 		if(min_size > size() || flags != flags_) {
-			alloc(min_size, flags);
+			alloc(context, min_size, flags);
 		}
 	}
 
@@ -86,6 +86,24 @@ public:
 		}
 	}
 
+	void download_count(std::shared_ptr<CommandQueue> queue, T* data, size_t count, bool blocking = true) const {
+		if(data_) {
+			if(cl_int err = clEnqueueReadBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, count * sizeof(T), data, 0, 0, 0)) {
+				throw std::runtime_error("clEnqueueReadBuffer() failed with " + get_error_string(err));
+			}
+		}
+	}
+
+	std::vector<T> download(std::shared_ptr<CommandQueue> queue) const {
+		std::vector<T> res(size());
+		if(data_) {
+			if(cl_int err = clEnqueueReadBuffer(queue->get(), data_, CL_TRUE, 0, num_bytes(), res.data(), 0, 0, 0)) {
+				throw std::runtime_error("clEnqueueReadBuffer() failed with " + get_error_string(err));
+			}
+		}
+		return res;
+	}
+
 	void copy_from(std::shared_ptr<CommandQueue> queue, const Buffer1D<T>& other) {
 		alloc_min(other.size(), flags_);
 		if(data_) {
@@ -96,9 +114,12 @@ public:
 	}
 
 	void set_zero(std::shared_ptr<CommandQueue> queue) {
-		const T zero = T();
+		memset(queue, 0);
+	}
+
+	void memset(std::shared_ptr<CommandQueue> queue, const T value) {
 		if(data_) {
-			if(cl_int err = clEnqueueFillBuffer(queue->get(), data_, &zero, sizeof(T), 0, num_bytes(), 0, 0, 0)) {
+			if(cl_int err = clEnqueueFillBuffer(queue->get(), data_, &value, sizeof(T), 0, num_bytes(), 0, 0, 0)) {
 				throw std::runtime_error("clEnqueueFillBuffer() failed with " + get_error_string(err));
 			}
 		}

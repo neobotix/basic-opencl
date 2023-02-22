@@ -9,43 +9,22 @@
 
 #include <map>
 #include <set>
+#include <mutex>
 #include <fstream>
 
 
 namespace automy {
 namespace basic_opencl {
 
-std::set<std::string> g_includes;
-
-std::map<std::string, std::shared_ptr<const Program>> g_programs;
-
-
-void add_include_path(const std::string& path) {
-	std::lock_guard<std::mutex> lock(g_mutex);
-	g_includes.insert(path);
+std::shared_ptr<Program> Program::create(cl_context context, cl_platform_id platform) {
+	return std::make_shared<Program>(context, platform);
 }
 
-std::shared_ptr<const Program> get_program(const std::string& name) {
-	std::lock_guard<std::mutex> lock(g_mutex);
-	auto it = g_programs.find(name);
-	if(it != g_programs.end()) {
-		return it->second;
-	} else {
-		throw std::runtime_error("get_program() undefined reference to program '" + name + "'");
-	}
+Program::Program(cl_context context, cl_platform_id platform)
+	:	context(context),
+		platform(platform)
+{
 }
-
-void register_program(const std::string& name, std::shared_ptr<const Program> program) {
-	std::lock_guard<std::mutex> lock(g_mutex);
-	g_programs[name] = program;
-}
-
-
-std::shared_ptr<Program> Program::create() {
-	return std::make_shared<Program>();
-}
-
-Program::Program() {}
 
 Program::~Program() {
 	if(program) {
@@ -53,12 +32,15 @@ Program::~Program() {
 	}
 }
 
-void Program::add_source(const std::string& file_name) {
+void Program::add_include_path(const std::string& path) {
+	includes.insert(path);
+}
+
+void Program::add_source(const std::string& file_name)
+{
 	std::vector<std::string> source_dirs {""};
-	{
-		std::lock_guard<std::mutex> lock(g_mutex);
-		source_dirs.insert(source_dirs.end(), g_includes.begin(), g_includes.end());
-	}
+	source_dirs.insert(source_dirs.end(), includes.begin(), includes.end());
+
 	for(const auto& dir : source_dirs) {
 		std::ifstream in(dir + file_name);
 		if(in.good()) {
@@ -71,8 +53,7 @@ void Program::add_source(const std::string& file_name) {
 
 void Program::create_from_source() {
 	if(program) {
-		clReleaseProgram(program);
-		program = 0;
+		throw std::logic_error("program already created");
 	}
 	
 	std::vector<const char*> list;
@@ -81,31 +62,32 @@ void Program::create_from_source() {
 	}
 	
 	cl_int err = 0;
-	program = clCreateProgramWithSource(g_context, list.size(), &list[0], 0, &err);
+	program = clCreateProgramWithSource(context, list.size(), &list[0], 0, &err);
 	if(err) {
 		throw std::runtime_error("clCreateProgramWithSource() failed with " + get_error_string(err));
 	}
 }
 
-bool Program::build() {
+bool Program::build(cl_device_type device_type, bool with_arg_names)
+{
 	if(!program) {
-		throw std::logic_error("program == 0");
+		throw std::logic_error("program == nullptr");
 	}
+	have_arg_info = with_arg_names;
 	
-	std::string options_ = options + " -cl-kernel-arg-info";
-	{
-		std::lock_guard<std::mutex> lock(g_mutex);
-		for(const auto& path : g_includes) {
-			if(!path.empty()) {
-				options_ += " -I " + path;
-			}
+	std::string options_ = options;
+	if(with_arg_names) {
+		options_ += " -cl-kernel-arg-info";
+	}
+	for(const auto& path : includes) {
+		if(!path.empty()) {
+			options_ += " -I " + path;
 		}
 	}
 	
 	bool success = true;
-	std::vector<cl_device_id> devices = get_devices();
+	std::vector<cl_device_id> devices = get_devices(platform, device_type);
 	{
-		std::lock_guard<std::mutex> lock(g_mutex);
 		if(cl_int err = clBuildProgram(program, devices.size(), &devices[0], options_.c_str(), 0, 0)) {
 			if(err != CL_BUILD_PROGRAM_FAILURE) {
 				throw std::runtime_error("clBuildProgram() failed with " + get_error_string(err));
@@ -159,7 +141,7 @@ std::shared_ptr<Kernel> Program::create_kernel(const std::string& name) const {
 	if(err) {
 		throw std::runtime_error("clCreateKernel() failed for '" + name + "' with " + get_error_string(err));
 	}
-	return Kernel::create(kernel);
+	return Kernel::create(kernel, have_arg_info);
 }
 
 

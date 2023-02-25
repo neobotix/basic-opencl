@@ -36,6 +36,8 @@ public:
 	
 	void add_source(const std::string& file_name);
 	
+	void add_source_code(const std::string& source);
+
 	void add_include_path(const std::string& path);
 
 	void create_from_source();

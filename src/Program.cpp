@@ -51,6 +51,11 @@ void Program::add_source(const std::string& file_name)
 	throw std::runtime_error("no such file: '" + file_name + "'");
 }
 
+void Program::add_source_code(const std::string& source)
+{
+	sources.push_back(source);
+}
+
 void Program::create_from_source() {
 	if(program) {
 		throw std::logic_error("program already created");

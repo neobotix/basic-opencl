@@ -74,7 +74,6 @@ public:
 	}
 
 	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<T>& vec, bool copy = true) {
-		alloc_min(vec.size(), flags_);
 		upload(queue, vec.data(), copy);
 	}
 
@@ -105,7 +104,6 @@ public:
 	}
 
 	void copy_from(std::shared_ptr<CommandQueue> queue, const Buffer1D<T>& other) {
-		alloc_min(other.size(), flags_);
 		if(data_) {
 			if(cl_int err = clEnqueueCopyBuffer(queue->get(), other.data(), data_, 0, 0, num_bytes(), 0, 0, 0)) {
 				throw std::runtime_error("clEnqueueCopyBuffer() failed with " + get_error_string(err));

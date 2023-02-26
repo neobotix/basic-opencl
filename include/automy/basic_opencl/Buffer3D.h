@@ -86,7 +86,6 @@ public:
 	}
 	
 	void upload(std::shared_ptr<CommandQueue> queue, const std::vector<T>& vec, bool copy = true) {
-		resize(vec.size(), 1);
 		upload(queue, vec.data(), copy);
 	}
 	
@@ -100,7 +99,6 @@ public:
 
 #ifdef WITH_AUTOMY_BASIC
 	void upload(std::shared_ptr<CommandQueue> queue, const basic::Image<T>& img, bool copy = true) {
-		resize(img.width(), img.height(), img.depth());
 		upload(queue, img.get_data(), copy);
 	}
 
@@ -112,7 +110,6 @@ public:
 
 #ifdef WITH_AUTOMY_MATH
 	void upload(std::shared_ptr<CommandQueue> queue, const math::MatrixX<T>& mat, bool copy = true) {
-		resize(mat.rows(), mat.cols());
 		upload(queue, mat.get_data(), copy);
 	}
 
@@ -126,7 +123,6 @@ public:
 #endif
 	
 	void copy_from(std::shared_ptr<CommandQueue> queue, const Buffer3D<T>& other) {
-		resize(other.width(), other.height(), other.depth());
 		if(data_) {
 			if(cl_int err = clEnqueueCopyBuffer(queue->get(), other.data(), data_, 0, 0, size() * sizeof(T), 0, 0, 0)) {
 				throw std::runtime_error("clEnqueueCopyBuffer() failed with " + get_error_string(err));

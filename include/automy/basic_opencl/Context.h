@@ -16,6 +16,8 @@
 #define AUTOMY_BASIC_OPENCL_EXPORT
 #endif
 
+#define CL_TARGET_OPENCL_VERSION 120
+
 #include <CL/cl.h>
 
 #include <vector>

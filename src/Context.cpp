@@ -19,7 +19,9 @@ std::vector<cl_platform_id> get_platforms()
 	std::vector<cl_platform_id> platforms(16);
 
 	if(cl_int err = clGetPlatformIDs(platforms.size(), platforms.data(), &num_platforms)) {
-		throw std::runtime_error("clGetPlatformIDs() failed with: " + get_error_string(err));
+		if(err != CL_PLATFORM_NOT_FOUND_KHR) {
+			throw std::runtime_error("clGetPlatformIDs() failed with: " + get_error_string(err));
+		}
 	}
 	platforms.resize(num_platforms);
 	return platforms;

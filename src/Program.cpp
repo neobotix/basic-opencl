@@ -16,13 +16,12 @@
 namespace automy {
 namespace basic_opencl {
 
-std::shared_ptr<Program> Program::create(cl_context context, cl_platform_id platform) {
-	return std::make_shared<Program>(context, platform);
+std::shared_ptr<Program> Program::create(cl_context context) {
+	return std::make_shared<Program>(context);
 }
 
-Program::Program(cl_context context, cl_platform_id platform)
-	:	context(context),
-		platform(platform)
+Program::Program(cl_context context)
+	:	context(context)
 {
 }
 
@@ -73,7 +72,7 @@ void Program::create_from_source() {
 	}
 }
 
-bool Program::build(cl_device_type device_type, bool with_arg_names)
+bool Program::build(const std::vector<cl_device_id>& devices, bool with_arg_names)
 {
 	if(!program) {
 		throw std::logic_error("program == nullptr");
@@ -91,14 +90,11 @@ bool Program::build(cl_device_type device_type, bool with_arg_names)
 	}
 	
 	bool success = true;
-	std::vector<cl_device_id> devices = get_devices(platform, device_type);
-	{
-		if(cl_int err = clBuildProgram(program, devices.size(), &devices[0], options_.c_str(), 0, 0)) {
-			if(err != CL_BUILD_PROGRAM_FAILURE) {
-				throw std::runtime_error("clBuildProgram() failed with " + get_error_string(err));
-			}
-			success = false;
+	if(cl_int err = clBuildProgram(program, devices.size(), &devices[0], options_.c_str(), 0, 0)) {
+		if(err != CL_BUILD_PROGRAM_FAILURE) {
+			throw std::runtime_error("clBuildProgram() failed with " + get_error_string(err));
 		}
+		success = false;
 	}
 	
 	for(cl_device_id device : devices) {

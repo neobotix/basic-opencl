@@ -90,7 +90,7 @@ bool Program::build(const std::vector<cl_device_id>& devices, bool with_arg_name
 	}
 	
 	bool success = true;
-	if(cl_int err = clBuildProgram(program, devices.size(), &devices[0], options_.c_str(), 0, 0)) {
+	if(cl_int err = clBuildProgram(program, devices.size(), devices.data(), options_.c_str(), 0, 0)) {
 		if(err != CL_BUILD_PROGRAM_FAILURE) {
 			throw std::runtime_error("clBuildProgram() failed with " + get_error_string(err));
 		}

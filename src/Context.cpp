@@ -46,15 +46,11 @@ cl_platform_id find_platform_by_name(const std::string& name)
 	return nullptr;
 }
 
-cl_context create_context(cl_platform_id platform, cl_device_type device_type)
+cl_context create_context(cl_platform_id platform, const std::vector<cl_device_id>& devices)
 {
-	const auto device_list = get_devices(platform, device_type);
-	if(device_list.empty()) {
-		throw std::runtime_error("clGetDeviceIDs(): no device found");
-	}
 	cl_context_properties props[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0};
 	cl_int err = 0;
-	const auto context = clCreateContext(props, device_list.size(), device_list.data(), 0, 0, &err);
+	const auto context = clCreateContext(props, devices.size(), devices.data(), 0, 0, &err);
 	if(err) {
 		throw std::runtime_error("clCreateContext() failed with " + get_error_string(err));
 	}

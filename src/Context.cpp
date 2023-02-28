@@ -72,8 +72,9 @@ std::vector<cl_device_id> get_devices(cl_platform_id platform, cl_device_type de
 	cl_uint num_devices = 0;
 	std::vector<cl_device_id> device_list(256);
 	if(cl_int err = clGetDeviceIDs(platform, device_type, device_list.size(), device_list.data(), &num_devices)) {
-		device_list.clear();
-		throw std::runtime_error("clGetDeviceIDs() failed with: " + get_error_string(err));
+		if(err != CL_DEVICE_NOT_FOUND) {
+			throw std::runtime_error("clGetDeviceIDs() failed with: " + get_error_string(err));
+		}
 	}
 	device_list.resize(num_devices);
 	return device_list;

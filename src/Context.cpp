@@ -18,8 +18,14 @@ std::vector<cl_platform_id> get_platforms()
 	cl_uint num_platforms = 0;
 	std::vector<cl_platform_id> platforms(16);
 
-	if(cl_int err = clGetPlatformIDs(platforms.size(), platforms.data(), &num_platforms)) {
-		if(err != CL_PLATFORM_NOT_FOUND_KHR) {
+	if(cl_int err = clGetPlatformIDs(platforms.size(), platforms.data(), &num_platforms))
+	{
+#ifdef cl_khr_icd
+		if(err != CL_PLATFORM_NOT_FOUND_KHR)
+#else
+		if(true)
+#endif
+		{
 			throw std::runtime_error("clGetPlatformIDs() failed with: " + get_error_string(err));
 		}
 	}

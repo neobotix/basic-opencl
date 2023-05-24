@@ -18,5 +18,19 @@
 #define AUTOMY_BASIC_OPENCL_EXPORT
 #endif
 
+#include <stdexcept>
+
+
+namespace automy {
+namespace basic_opencl {
+
+class opencl_error_t : public std::runtime_error {
+public:
+	opencl_error_t(const std::string& msg) : runtime_error(msg) {}
+};
+
+
+} // basic_opencl
+} // automy
 
 #endif // INCLUDE_AUTOMY_BASIC_OPENCL_OPENCL_H_

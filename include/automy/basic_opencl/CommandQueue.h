@@ -38,13 +38,13 @@ public:
 	
 	void flush() {
 		if(clFlush(queue)) {
-			throw std::runtime_error("clFlush() failed");
+			throw opencl_error_t("clFlush() failed");
 		}
 	}
 	
 	void finish() {
 		if(clFinish(queue)) {
-			throw std::runtime_error("clFinish() failed");
+			throw opencl_error_t("clFinish() failed");
 		}
 	}
 	

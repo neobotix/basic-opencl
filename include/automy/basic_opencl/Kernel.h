@@ -73,7 +73,7 @@ protected:
 	template<typename T>
 	void set_arg(const cl_uint arg, const T& value) {
 		if(clSetKernelArg(kernel, arg, sizeof(T), &value)) {
-			throw std::runtime_error("clSetKernelArg() failed for " + name + " : " + std::to_string(arg));
+			throw opencl_error_t("clSetKernelArg() failed for " + name + " : " + std::to_string(arg));
 		}
 	}
 
@@ -82,7 +82,7 @@ protected:
 		auto it = arg_map.find(arg);
 		if(it != arg_map.end()) {
 			if(clSetKernelArg(kernel, it->second, sizeof(T), &value)) {
-				throw std::runtime_error("clSetKernelArg() failed for " + name + " : " + arg);
+				throw opencl_error_t("clSetKernelArg() failed for " + name + " : " + arg);
 			}
 		} else {
 			throw std::logic_error("no such argument '" + arg + "' in kernel '" + name + "'");

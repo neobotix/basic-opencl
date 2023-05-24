@@ -16,14 +16,14 @@ Kernel::Kernel(cl_kernel kernel_, bool with_arg_map)
 {
 	size_t length = 0;
 	if(cl_int err = clGetKernelInfo(kernel, CL_KERNEL_FUNCTION_NAME, 0, 0, &length)) {
-		throw std::runtime_error("clGetKernelInfo(CL_KERNEL_FUNCTION_NAME) failed with " + get_error_string(err));
+		throw opencl_error_t("clGetKernelInfo(CL_KERNEL_FUNCTION_NAME) failed with " + get_error_string(err));
 	}
 	if(!length) {
 		throw std::runtime_error("kernel name too short");
 	}
 	name.resize(length);
 	if(cl_int err = clGetKernelInfo(kernel, CL_KERNEL_FUNCTION_NAME, name.size(), &name[0], &length)) {
-		throw std::runtime_error("clGetKernelInfo(CL_KERNEL_FUNCTION_NAME) failed with " + get_error_string(err));
+		throw opencl_error_t("clGetKernelInfo(CL_KERNEL_FUNCTION_NAME) failed with " + get_error_string(err));
 	}
 	if(length) {
 		name.resize(length - 1);
@@ -32,12 +32,12 @@ Kernel::Kernel(cl_kernel kernel_, bool with_arg_map)
 	if(with_arg_map) {
 		cl_uint num_args = 0;
 		if(cl_int err = clGetKernelInfo(kernel, CL_KERNEL_NUM_ARGS, sizeof(num_args), &num_args, &length)) {
-			throw std::runtime_error("clGetKernelInfo(CL_KERNEL_NUM_ARGS) failed with " + get_error_string(err));
+			throw opencl_error_t("clGetKernelInfo(CL_KERNEL_NUM_ARGS) failed with " + get_error_string(err));
 		}
 
 		for(cl_uint i = 0; i < num_args; ++i) {
 			if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, 0, 0, &length)) {
-				throw std::runtime_error("clGetKernelArgInfo(CL_KERNEL_ARG_NAME, 0, 0) failed with " + get_error_string(err));
+				throw opencl_error_t("clGetKernelArgInfo(CL_KERNEL_ARG_NAME, 0, 0) failed with " + get_error_string(err));
 			}
 			if(!length) {
 				throw std::runtime_error("kernel argument name too short");
@@ -45,7 +45,7 @@ Kernel::Kernel(cl_kernel kernel_, bool with_arg_map)
 			std::string arg;
 			arg.resize(length);
 			if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, arg.size(), &arg[0], &length)) {
-				throw std::runtime_error("clGetKernelArgInfo(CL_KERNEL_ARG_NAME) failed with " + get_error_string(err));
+				throw opencl_error_t("clGetKernelArgInfo(CL_KERNEL_ARG_NAME) failed with " + get_error_string(err));
 			}
 			if(length) {
 				arg.resize(length - 1);
@@ -70,7 +70,7 @@ void Kernel::set_local(const std::string& arg, const size_t& num_bytes) {
 	auto it = arg_map.find(arg);
 	if(it != arg_map.end()) {
 		if(clSetKernelArg(kernel, it->second, num_bytes, 0)) {
-			throw std::runtime_error("clSetKernelArg() failed for " + name + " : " + arg);
+			throw opencl_error_t("clSetKernelArg() failed for " + name + " : " + arg);
 		}
 	} else {
 		throw std::logic_error("no such argument '" + arg + "' in kernel '" + name + "'");
@@ -79,13 +79,13 @@ void Kernel::set_local(const std::string& arg, const size_t& num_bytes) {
 
 void Kernel::enqueue(std::shared_ptr<CommandQueue> queue, const size_t& global_size) {
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 1, 0, &global_size, 0, 0, 0, 0)) {
-		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
+		throw opencl_error_t("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
 	}
 }
 
 void Kernel::enqueue(std::shared_ptr<CommandQueue> queue, const size_t& global_size, const size_t& local_size) {
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 1, 0, &global_size, &local_size, 0, 0, 0)) {
-		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
+		throw opencl_error_t("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
 	}
 }
 
@@ -96,13 +96,13 @@ void Kernel::enqueue_ceiled(std::shared_ptr<CommandQueue> queue, const size_t& g
 
 void Kernel::enqueue_2D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 2>& global_size) {
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 2, 0, global_size.data(), 0, 0, 0, 0)) {
-		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
+		throw opencl_error_t("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
 	}
 }
 
 void Kernel::enqueue_2D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 2>& global_size, const std::array<size_t, 2>& local_size) {
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 2, 0, global_size.data(), local_size.data(), 0, 0, 0)) {
-		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
+		throw opencl_error_t("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
 	}
 }
 
@@ -116,13 +116,13 @@ void Kernel::enqueue_ceiled_2D(std::shared_ptr<CommandQueue> queue, const std::a
 
 void Kernel::enqueue_3D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 3>& global_size) {
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 3, 0, global_size.data(), 0, 0, 0, 0)) {
-		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
+		throw opencl_error_t("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
 	}
 }
 
 void Kernel::enqueue_3D(std::shared_ptr<CommandQueue> queue, const std::array<size_t, 3>& global_size, const std::array<size_t, 3>& local_size) {
 	if(cl_int err = clEnqueueNDRangeKernel(queue->get(), kernel, 3, 0, global_size.data(), local_size.data(), 0, 0, 0)) {
-		throw std::runtime_error("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
+		throw opencl_error_t("clEnqueueNDRangeKernel() failed for kernel '" + name + "' with " + get_error_string(err));
 	}
 }
 

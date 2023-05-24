@@ -26,7 +26,7 @@ std::vector<cl_platform_id> get_platforms()
 		if(true)
 #endif
 		{
-			throw std::runtime_error("clGetPlatformIDs() failed with: " + get_error_string(err));
+			throw opencl_error_t("clGetPlatformIDs() failed with: " + get_error_string(err));
 		}
 	}
 	platforms.resize(num_platforms);
@@ -37,7 +37,7 @@ std::string get_platform_name(cl_platform_id platform)
 {
 	char name[1024] = {};
 	if(clGetPlatformInfo(platform, CL_PLATFORM_NAME, sizeof(name), name, 0)) {
-		throw std::runtime_error("clGetPlatformInfo() failed");
+		throw opencl_error_t("clGetPlatformInfo() failed");
 	}
 	return std::string(name);
 }
@@ -58,7 +58,7 @@ cl_context create_context(cl_platform_id platform, const std::vector<cl_device_i
 	cl_int err = 0;
 	const auto context = clCreateContext(props, devices.size(), devices.data(), 0, 0, &err);
 	if(err) {
-		throw std::runtime_error("clCreateContext() failed with " + get_error_string(err));
+		throw opencl_error_t("clCreateContext() failed with " + get_error_string(err));
 	}
 	return context;
 }
@@ -67,7 +67,7 @@ void release_context(cl_context& context)
 {
 	if(context) {
 		if(cl_int err = clReleaseContext(context)) {
-			throw std::runtime_error("clReleaseContext() failed with " + get_error_string(err));
+			throw opencl_error_t("clReleaseContext() failed with " + get_error_string(err));
 		}
 		context = nullptr;
 	}
@@ -79,7 +79,7 @@ std::vector<cl_device_id> get_devices(cl_platform_id platform, cl_device_type de
 	std::vector<cl_device_id> device_list(256);
 	if(cl_int err = clGetDeviceIDs(platform, device_type, device_list.size(), device_list.data(), &num_devices)) {
 		if(err != CL_DEVICE_NOT_FOUND) {
-			throw std::runtime_error("clGetDeviceIDs() failed with: " + get_error_string(err));
+			throw opencl_error_t("clGetDeviceIDs() failed with: " + get_error_string(err));
 		}
 	}
 	device_list.resize(num_devices);
@@ -100,7 +100,7 @@ std::string get_device_name(cl_device_id device_id)
 	char dev_name[256] = {};
 	size_t dev_name_len = 0;
 	if(cl_int err = clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(dev_name), dev_name, &dev_name_len)) {
-		throw std::runtime_error("clGetDeviceInfo() failed with " + get_error_string(err));
+		throw opencl_error_t("clGetDeviceInfo() failed with " + get_error_string(err));
 	}
 	return std::string(dev_name, dev_name_len > 0 ? dev_name_len - 1 : 0);
 }
@@ -110,7 +110,7 @@ std::shared_ptr<CommandQueue> create_command_queue(cl_context context, cl_device
 	cl_int err = 0;
 	cl_command_queue queue = clCreateCommandQueue(context, device, 0, &err);
 	if(err) {
-		throw std::logic_error("clCreateCommandQueue() failed with " + get_error_string(err));
+		throw opencl_error_t("clCreateCommandQueue() failed with " + get_error_string(err));
 	}
 	return CommandQueue::create(queue);
 }

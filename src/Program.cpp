@@ -68,7 +68,7 @@ void Program::create_from_source() {
 	cl_int err = 0;
 	program = clCreateProgramWithSource(context, list.size(), &list[0], 0, &err);
 	if(err) {
-		throw std::runtime_error("clCreateProgramWithSource() failed with " + get_error_string(err));
+		throw opencl_error_t("clCreateProgramWithSource() failed with " + get_error_string(err));
 	}
 }
 
@@ -92,7 +92,7 @@ bool Program::build(const std::vector<cl_device_id>& devices, bool with_arg_name
 	bool success = true;
 	if(cl_int err = clBuildProgram(program, devices.size(), devices.data(), options_.c_str(), 0, 0)) {
 		if(err != CL_BUILD_PROGRAM_FAILURE) {
-			throw std::runtime_error("clBuildProgram() failed with " + get_error_string(err));
+			throw opencl_error_t("clBuildProgram() failed with " + get_error_string(err));
 		}
 		success = false;
 	}
@@ -101,19 +101,19 @@ bool Program::build(const std::vector<cl_device_id>& devices, bool with_arg_name
 		size_t length = 0;
 		cl_build_status status;
 		if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_STATUS, sizeof(status), &status, &length)) {
-			throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_STATUS) failed with " + get_error_string(err));
+			throw opencl_error_t("clGetProgramBuildInfo(CL_PROGRAM_BUILD_STATUS) failed with " + get_error_string(err));
 		}
 		if(status != CL_BUILD_SUCCESS) {
 			success = false;
 		}
 		if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, 0, &length)) {
-			throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG, 0, 0) failed with " + get_error_string(err));
+			throw opencl_error_t("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG, 0, 0) failed with " + get_error_string(err));
 		}
 		if(length > 0) {
 			std::string log;
 			log.resize(length);
 			if(cl_int err = clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, log.size(), &log[0], &length)) {
-				throw std::runtime_error("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG) failed with " + get_error_string(err));
+				throw opencl_error_t("clGetProgramBuildInfo(CL_PROGRAM_BUILD_LOG) failed with " + get_error_string(err));
 			}
 			if(length) {
 				log.resize(length - 1);
@@ -140,7 +140,7 @@ std::shared_ptr<Kernel> Program::create_kernel(const std::string& name) const {
 	cl_int err = 0;
 	cl_kernel kernel = clCreateKernel(program, name.c_str(), &err);
 	if(err) {
-		throw std::runtime_error("clCreateKernel() failed for '" + name + "' with " + get_error_string(err));
+		throw opencl_error_t("clCreateKernel() failed for '" + name + "' with " + get_error_string(err));
 	}
 	return Kernel::create(kernel, have_arg_info);
 }

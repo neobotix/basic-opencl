@@ -35,7 +35,7 @@ public:
 		if(new_size != size() || flags != flags_) {
 			if(data_) {
 				if(cl_int err = clReleaseMemObject(data_)) {
-					throw std::runtime_error("clReleaseMemObject() failed with " + get_error_string(err));
+					throw opencl_error_t("clReleaseMemObject() failed with " + get_error_string(err));
 				}
 				data_ = nullptr;
 			}
@@ -43,7 +43,7 @@ public:
 				cl_int err = 0;
 				data_ = clCreateBuffer(context, flags, new_size * sizeof(T), nullptr, &err);
 				if(err) {
-					throw std::runtime_error("clCreateBuffer() failed with " + get_error_string(err));
+					throw opencl_error_t("clCreateBuffer() failed with " + get_error_string(err));
 				}
 			}
 		}
@@ -68,7 +68,7 @@ public:
 	void upload(std::shared_ptr<CommandQueue> queue, const T* data, bool copy = true) {
 		if(data_) {
 			if(cl_int err = clEnqueueWriteBuffer(queue->get(), data_, copy ? CL_TRUE : CL_FALSE, 0, num_bytes(), data, 0, 0, 0)) {
-				throw std::runtime_error("clEnqueueWriteBuffer() failed with " + get_error_string(err));
+				throw opencl_error_t("clEnqueueWriteBuffer() failed with " + get_error_string(err));
 			}
 		}
 	}
@@ -80,7 +80,7 @@ public:
 	void download(std::shared_ptr<CommandQueue> queue, T* data, bool blocking = true) const {
 		if(data_) {
 			if(cl_int err = clEnqueueReadBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, num_bytes(), data, 0, 0, 0)) {
-				throw std::runtime_error("clEnqueueReadBuffer() failed with " + get_error_string(err));
+				throw opencl_error_t("clEnqueueReadBuffer() failed with " + get_error_string(err));
 			}
 		}
 	}
@@ -88,7 +88,7 @@ public:
 	void download_count(std::shared_ptr<CommandQueue> queue, T* data, size_t count, bool blocking = true) const {
 		if(data_) {
 			if(cl_int err = clEnqueueReadBuffer(queue->get(), data_, blocking ? CL_TRUE : CL_FALSE, 0, count * sizeof(T), data, 0, 0, 0)) {
-				throw std::runtime_error("clEnqueueReadBuffer() failed with " + get_error_string(err));
+				throw opencl_error_t("clEnqueueReadBuffer() failed with " + get_error_string(err));
 			}
 		}
 	}
@@ -97,7 +97,7 @@ public:
 		std::vector<T> res(size());
 		if(data_) {
 			if(cl_int err = clEnqueueReadBuffer(queue->get(), data_, CL_TRUE, 0, num_bytes(), res.data(), 0, 0, 0)) {
-				throw std::runtime_error("clEnqueueReadBuffer() failed with " + get_error_string(err));
+				throw opencl_error_t("clEnqueueReadBuffer() failed with " + get_error_string(err));
 			}
 		}
 		return res;
@@ -106,7 +106,7 @@ public:
 	void copy_from(std::shared_ptr<CommandQueue> queue, const Buffer1D<T>& other) {
 		if(data_) {
 			if(cl_int err = clEnqueueCopyBuffer(queue->get(), other.data(), data_, 0, 0, num_bytes(), 0, 0, 0)) {
-				throw std::runtime_error("clEnqueueCopyBuffer() failed with " + get_error_string(err));
+				throw opencl_error_t("clEnqueueCopyBuffer() failed with " + get_error_string(err));
 			}
 		}
 	}
@@ -118,7 +118,7 @@ public:
 	void memset(std::shared_ptr<CommandQueue> queue, const T value) {
 		if(data_) {
 			if(cl_int err = clEnqueueFillBuffer(queue->get(), data_, &value, sizeof(T), 0, num_bytes(), 0, 0, 0)) {
-				throw std::runtime_error("clEnqueueFillBuffer() failed with " + get_error_string(err));
+				throw opencl_error_t("clEnqueueFillBuffer() failed with " + get_error_string(err));
 			}
 		}
 	}

@@ -40,9 +40,7 @@ Kernel::Kernel(cl_kernel kernel_, bool with_arg_map)
 				throw opencl_error_t("clGetKernelArgInfo(CL_KERNEL_ARG_NAME, 0, 0) failed with " + get_error_string(err));
 			}
 
-			// workaround for API issue observed with ROCK 5B, Mali-G610 MP4 GPU, OpenCL implementation
-			// CL_KERNEL_ARG_NAME, param_value_size=0, param_value=NULL, always 0 in param_value_size_ret
-			// if detected, try fallback with big enough temp buffer, to find size
+			// OpenCL <= 2.1, not required to return bytes needed, only bytes copied
 			if(!length) {
 				char paramv[256];
 				if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, sizeof(paramv), &paramv, &length)) {

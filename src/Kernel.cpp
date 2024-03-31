@@ -36,21 +36,15 @@ Kernel::Kernel(cl_kernel kernel_, bool with_arg_map)
 		}
 
 		for(cl_uint i = 0; i < num_args; ++i) {
-			char paramv[256];
-			if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, sizeof(paramv), &paramv, &length)) {
-				throw opencl_error_t("clGetKernelArgInfo(CL_KERNEL_ARG_NAME, tmpbufsize, tmpbuf) failed with " + get_error_string(err));
+			std::string arg;
+			arg.resize(256);
+			if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, arg.size(), &arg[0], &length)) {
+				throw opencl_error_t("clGetKernelArgInfo(CL_KERNEL_ARG_NAME) failed with " + get_error_string(err));
 			}
 			if(!length) {
 				throw std::runtime_error("kernel argument name too short or buffer too small");
 			}
-			std::string arg;
-			arg.resize(length);
-			if(cl_int err = clGetKernelArgInfo(kernel, i, CL_KERNEL_ARG_NAME, arg.size(), &arg[0], &length)) {
-				throw opencl_error_t("clGetKernelArgInfo(CL_KERNEL_ARG_NAME) failed with " + get_error_string(err));
-			}
-			if(length) {
-				arg.resize(length - 1);
-			}
+			arg.resize(length - 1);
 			arg_list.push_back(arg);
 			arg_map[arg] = i;
 		}

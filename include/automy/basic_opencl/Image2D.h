@@ -20,7 +20,7 @@ namespace basic_opencl {
 template<typename T>
 class Image2D : public Image {
 public:
-	Image2D(size_t width, size_t height, cl_mem_flags flags,
+	Image2D(cl_context context, size_t width, size_t height, cl_mem_flags flags,
 			cl_channel_order order, cl_channel_type type, const T* data = nullptr)
 		:	Image(), width_(width), height_(height)
 	{
@@ -30,7 +30,7 @@ public:
 		desc_.image_width = width;
 		desc_.image_height = height;
 		cl_int err = 0;
-		data_ = clCreateImage(g_context, flags, &format_, &desc_, (void*)data, &err);
+		data_ = clCreateImage(context, flags, &format_, &desc_, (void*)data, &err);
 		if(err) {
 			throw std::runtime_error("clCreateImage2D() failed with " + get_error_string(err));
 		}

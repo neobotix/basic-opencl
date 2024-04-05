@@ -39,6 +39,7 @@ public:
 
 	using Buffer3D<T>::depth;
 
+#ifdef WITH_AUTOMY_MATH
 	void upload(std::shared_ptr<CommandQueue> queue, const math::Matrix<T, Rows, Cols>& mat, bool blocking = true) {
 		if(rows() != Rows || cols() != Cols || depth() != 1) {
 			throw std::logic_error("dimension mismatch");
@@ -79,6 +80,7 @@ public:
 		mats.resize(depth());
 		Buffer3D<T>::download(queue, mats[0].get_data(), blocking);
 	}
+#endif
 
 };
 

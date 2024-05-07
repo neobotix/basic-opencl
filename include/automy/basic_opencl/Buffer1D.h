@@ -27,8 +27,8 @@ public:
 		return std::make_shared<Buffer1D<T>>();
 	}
 
-	static std::shared_ptr<Buffer1D<T>> create(size_t width, cl_mem_flags flags = 0) {
-		return std::make_shared<Buffer1D<T>>(width, flags);
+	static std::shared_ptr<Buffer1D<T>> create(cl_context context, size_t width, cl_mem_flags flags = 0) {
+		return std::make_shared<Buffer1D<T>>(context, width, flags);
 	}
 
 	void alloc(cl_context context, size_t new_size, cl_mem_flags flags = 0) {

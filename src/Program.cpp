@@ -170,6 +170,10 @@ bool Program::build(const std::vector<cl_device_id>& devices, bool with_arg_name
 	return success;
 }
 
+std::vector<std::string> Program::get_sources() const {
+	return sources;
+}
+
 std::map<cl_device_id, std::string> Program::get_binaries() const {
 	if(!program) {
 		throw std::logic_error("program == nullptr");

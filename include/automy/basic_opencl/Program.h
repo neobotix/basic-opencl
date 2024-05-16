@@ -50,6 +50,8 @@ public:
 	
 	bool build(const std::vector<cl_device_id>& devices, bool with_arg_names = true);
 
+	std::vector<std::string> get_sources() const;
+
 	std::map<cl_device_id, std::string> get_binaries() const;
 
 	void print_sources(std::ostream& out) const;

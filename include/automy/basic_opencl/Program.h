@@ -38,12 +38,20 @@ public:
 	
 	void add_source_code(const std::string& source);
 
+	void add_binary(cl_device_id device, const std::string& file_name);
+
+	void add_binary_code(cl_device_id device, const std::string& binary);
+
 	void add_include_path(const std::string& path);
 
 	void create_from_source();
+
+	void create_from_binary();
 	
 	bool build(const std::vector<cl_device_id>& devices, bool with_arg_names = true);
-	
+
+	std::map<cl_device_id, std::string> get_binaries() const;
+
 	void print_sources(std::ostream& out) const;
 	
 	void print_build_log(std::ostream& out) const;
@@ -57,6 +65,7 @@ private:
 	
 	std::set<std::string> includes;
 	std::vector<std::string> sources;
+	std::map<cl_device_id, std::string> binaries;
 
 };
 

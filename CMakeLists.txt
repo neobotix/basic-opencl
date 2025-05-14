@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.10)
 project(automy-basic-opencl)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -47,7 +47,6 @@ if(MSVC)
 	)
 endif()
 
-install(DIRECTORY kernel/ DESTINATION kernel)
 install(DIRECTORY include/ DESTINATION include)
 
 install(TARGETS automy_basic_opencl DESTINATION lib)
